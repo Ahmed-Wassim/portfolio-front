@@ -124,7 +124,18 @@ body {
 
 .btn-brutal-main {
   background-color: var(--main);
-  color: var(--ink);
+  /* --main is always yellow (#FFF500) — always needs dark text for contrast */
+  color: #111111;
+}
+
+/* Yellow surfaces always get dark borders regardless of theme */
+[data-theme="dark"] .btn-brutal-main {
+  border-color: #111111;
+  box-shadow: 4px 4px 0 #111111;
+}
+
+[data-theme="dark"] .btn-brutal-main:active {
+  box-shadow: 0 0 0 #111111;
 }
 
 /* Backgrounds */

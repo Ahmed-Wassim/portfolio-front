@@ -43,7 +43,7 @@ export function Sidebar({ unreadCount }: SidebarProps) {
               className={cn(
                 "flex items-center gap-3 px-4 py-3 font-mono text-xs font-bold tracking-widest transition-colors focus-brutal",
                 active
-                  ? "bg-[var(--main)] text-[var(--ink)] border-r-2 border-[var(--ink)]"
+                  ? "bg-[var(--main)] text-[#111111] border-r-2 border-[var(--ink)]"
                   : "hover:bg-[var(--ghost)]"
               )}
             >

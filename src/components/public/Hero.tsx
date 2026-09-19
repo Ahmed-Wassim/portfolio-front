@@ -76,11 +76,13 @@ export function Hero({ apiOnline }: HeroProps) {
         </h1>
 
         {/* Yellow tagline slab */}
-        <div className="border-2 border-[var(--ink)] bg-[var(--main)] shadow-brutal-lg inline-block px-5 py-4 mb-10 max-w-2xl">
-          <p className="font-mono font-bold text-[var(--ink)] text-[clamp(0.85rem,2vw,1.125rem)] leading-snug">
+        <div className="border-2 border-[#111111] bg-[var(--main)] shadow-brutal-lg inline-block px-5 py-4 mb-10 max-w-2xl"
+          style={{ boxShadow: "8px 8px 0 #111111" }}
+        >
+          <p className="font-mono font-bold text-[#111111] text-[clamp(0.85rem,2vw,1.125rem)] leading-snug">
             {site.tagline}
           </p>
-          <p className="font-mono text-xs text-[var(--ink)] mt-2 tracking-widest">
+          <p className="font-mono text-xs text-[#111111] mt-2 tracking-widest">
             {site.stack.join(" · ")}
           </p>
         </div>
