@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+/* ── Design tokens ─────────────────────────────────── */
+
 :root {
   --bg: #F7F5ED;
   --ink: #111111;
@@ -11,7 +13,7 @@
   --status-online: #22C55E;
   --danger: #DC2626;
   --success: #16A34A;
-  --ghost: color-mix(in srgb, var(--ink) 8%, transparent);
+  --ghost: color-mix(in srgb, #111111 8%, transparent);
 }
 
 [data-theme="dark"] {
@@ -25,22 +27,22 @@
   --status-online: #4ADE80;
   --danger: #F87171;
   --success: #4ADE80;
-  --ghost: color-mix(in srgb, var(--ink) 12%, transparent);
+  --ghost: color-mix(in srgb, #F7F5ED 12%, transparent);
 }
 
-@theme inline {
-  --color-bg: var(--bg);
-  --color-ink: var(--ink);
-  --color-panel: var(--panel);
-  --color-main: var(--main);
-  --color-secondary: var(--secondary);
-  --color-small: var(--small);
-  --color-muted: var(--muted);
-  --color-border: var(--ink);
-  --color-status-online: var(--status-online);
-  --color-danger: var(--danger);
-  --color-success: var(--success);
-  --color-ghost: var(--ghost);
+/* Tailwind v4 theme aliases — static values only */
+@theme {
+  --color-bg: #F7F5ED;
+  --color-ink: #111111;
+  --color-panel: #FFFFFF;
+  --color-main: #FFF500;
+  --color-secondary: #3B82F6;
+  --color-small: #F472B6;
+  --color-muted: #6B6B6B;
+  --color-border: #111111;
+  --color-status-online: #22C55E;
+  --color-danger: #DC2626;
+  --color-success: #16A34A;
 }
 
 *,
