@@ -43,6 +43,8 @@
   --color-status-online: #22C55E;
   --color-danger: #DC2626;
   --color-success: #16A34A;
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
 
 *,
@@ -60,6 +62,7 @@ body {
   margin: 0;
   background-color: var(--bg);
   color: var(--ink);
+  font-family: var(--font-sans, system-ui, sans-serif);
   min-height: 100dvh;
 }
 
@@ -160,5 +163,165 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Status LED blink ─────────────────────────────── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
+.led-blink {
+  animation: blink 1s step-start infinite;
+}
+
+/* ── Section anchor offset (clears sticky header) ─── */
+.section-anchor {
+  scroll-margin-top: 5rem;
+}
+
+/* ── Reveal animation ─────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 350ms ease, transform 350ms ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ── Markdown prose (articles) ───────────────────── */
+.prose-brutal {
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+.prose-brutal h1,
+.prose-brutal h2,
+.prose-brutal h3,
+.prose-brutal h4 {
+  font-family: var(--font-mono, monospace);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin: 1.5em 0 0.5em;
+  line-height: 1.2;
+}
+
+.prose-brutal h1 { font-size: clamp(1.5rem, 4vw, 2rem); }
+.prose-brutal h2 { font-size: clamp(1.25rem, 3vw, 1.5rem); }
+.prose-brutal h3 { font-size: 1.125rem; }
+
+.prose-brutal p { margin: 0.75em 0; }
+
+.prose-brutal a {
+  color: var(--secondary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.prose-brutal ul,
+.prose-brutal ol {
+  padding-left: 1.5em;
+  margin: 0.75em 0;
+}
+
+.prose-brutal li { margin: 0.25em 0; }
+
+.prose-brutal blockquote {
+  border-left: 4px solid var(--ink);
+  padding: 0.5em 1em;
+  margin: 1em 0;
+  background: var(--panel);
+  font-style: italic;
+}
+
+.prose-brutal pre {
+  background: var(--panel);
+  border: 2px solid var(--ink);
+  padding: 1em;
+  margin: 1em 0;
+  overflow-x: auto;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85em;
+}
+
+.prose-brutal code {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.875em;
+  background: var(--panel);
+  padding: 0.15em 0.35em;
+  border: 1px solid var(--ghost, #11111114);
+}
+
+.prose-brutal pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  overflow-x: auto;
+  display: block;
+}
+
+.prose-brutal table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.prose-brutal th,
+.prose-brutal td {
+  border: 2px solid var(--ink);
+  padding: 0.5em 0.75em;
+  text-align: left;
+  font-size: 0.875rem;
+}
+
+.prose-brutal th {
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  background: var(--panel);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.prose-brutal hr {
+  border: none;
+  border-top: 2px solid var(--ink);
+  margin: 2em 0;
+}
+
+.prose-brutal img {
+  max-width: 100%;
+  border: 2px solid var(--ink);
+}
+
+/* ── Responsive ───────────────────────────────────── */
+
+/* Stack header nav items on small screens is handled via flex-wrap in JSX.
+   320px title truncation is handled via `truncate` class in Header. */
+
+@media (max-width: 640px) {
+  .hide-sm {
+    display: none !important;
   }
 }
