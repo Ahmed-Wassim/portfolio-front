@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #F7F5ED;
+  --ink: #111111;
+  --panel: #FFFFFF;
+  --main: #FFF500;
+  --secondary: #3B82F6;
+  --small: #F472B6;
+  --muted: #6B6B6B;
+  --status-online: #22C55E;
+  --danger: #DC2626;
+  --success: #16A34A;
+  --ghost: color-mix(in srgb, var(--ink) 8%, transparent);
+}
+
+[data-theme="dark"] {
+  --bg: #0F0F0E;
+  --ink: #F7F5ED;
+  --panel: #1C1C1C;
+  --main: #FFF500;
+  --secondary: #60A5FA;
+  --small: #F9A8D4;
+  --muted: #9CA3AF;
+  --status-online: #4ADE80;
+  --danger: #F87171;
+  --success: #4ADE80;
+  --ghost: color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-ink: var(--ink);
+  --color-panel: var(--panel);
+  --color-main: var(--main);
+  --color-secondary: var(--secondary);
+  --color-small: var(--small);
+  --color-muted: var(--muted);
+  --color-border: var(--ink);
+  --color-status-online: var(--status-online);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-ghost: var(--ghost);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background-color: var(--bg);
+  color: var(--ink);
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--ink);
+  min-height: 100dvh;
+}
+
+/* ── Brutal utilities ─────────────────────────────── */
+
+.border-brutal {
+  border: 2px solid var(--ink);
+}
+
+.shadow-brutal {
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.shadow-brutal-lg {
+  box-shadow: 8px 8px 0 var(--ink);
+}
+
+[data-theme="dark"] .shadow-brutal-lg {
+  box-shadow: 6px 6px 0 var(--ink);
+}
+
+.outline-text {
+  color: transparent;
+  -webkit-text-stroke: 2px var(--ink);
+}
+
+/* Buttons */
+.btn-brutal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  padding: 0.5rem 1.25rem;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: box-shadow 80ms, transform 80ms;
+  text-decoration: none;
+}
+
+.btn-brutal:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 var(--ink);
+}
+
+.btn-brutal-ink {
+  background-color: var(--ink);
+  color: var(--bg);
+}
+
+.btn-brutal-panel {
+  background-color: var(--panel);
+  color: var(--ink);
+}
+
+.btn-brutal-main {
+  background-color: var(--main);
+  color: var(--ink);
+}
+
+/* Backgrounds */
+.bg-dots {
+  background-image: radial-gradient(var(--ghost) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.bg-grid {
+  background-image:
+    linear-gradient(var(--ghost) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ghost) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Links */
+.flash-blue {
+  transition: color 80ms;
+}
+
+.flash-blue:hover {
+  color: var(--secondary);
+}
+
+/* Focus */
+.focus-brutal:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* ── Reduced motion ───────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
