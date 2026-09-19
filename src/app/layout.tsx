@@ -32,6 +32,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html
       lang="en"
       data-theme="light"
+      suppressHydrationWarning
       className={`${ibmPlexMono.variable} ${spaceGrotesk.variable}`}
     >
       <head>
