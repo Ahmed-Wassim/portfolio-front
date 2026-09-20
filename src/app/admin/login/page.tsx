@@ -23,7 +23,7 @@ export default function LoginPage() {
   const passwordId = useId()
 
   useEffect(() => {
-    if (getToken()) router.replace("/admin")
+    if (getToken()) router.push("/admin")
   }, [router])
 
   const {
@@ -35,7 +35,7 @@ export default function LoginPage() {
   async function onSubmit(values: FormValues) {
     const result = await login(values.email, values.password)
     if (result.ok) {
-      router.replace("/admin")
+      router.push("/admin")
     } else {
       toast.error(result.error === "invalid credentials" ? "Invalid credentials." : result.error || "Login failed.")
     }
