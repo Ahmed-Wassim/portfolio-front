@@ -44,49 +44,24 @@ export const site = {
   hireMeHref: "#hire",
 
   // ── About ─────────────────────────────────────────────
+  // Fallback shown when the API is unavailable. Keep at least one entry.
   about: [
     "Backend engineer focused on building reliable, scalable systems.",
-    "I work with Go, Laravel, and PostgreSQL to design APIs and services that hold up under pressure.",
-    "I care about clean architecture, good developer tooling, and shipping things that work.",
   ] as const,
 
   // ── Skills ────────────────────────────────────────────
-  skills: [
-    {
-      category: "LANGUAGES",
-      items: ["Go", "PHP", "TypeScript", "SQL"],
-    },
-    {
-      category: "FRAMEWORKS",
-      items: ["Gin", "Laravel", "Next.js"],
-    },
-    {
-      category: "DATA",
-      items: ["PostgreSQL", "Redis", "GORM"],
-    },
-    {
-      category: "INFRA",
-      items: ["Docker", "Docker Compose", "Linux", "Nginx"],
-    },
-    {
-      category: "TOOLS",
-      items: ["Git", "GitHub", "REST APIs", "JWT"],
-    },
-  ] as const,
+  // Fallback shown when the API is unavailable.
+  skills: [] as { category: string; items: string[] }[],
 
   // ── Experience ────────────────────────────────────────
-  experience: [
-    {
-      period: "2025 — PRESENT",
-      company: "TRAVWARE",
-      role: "BACKEND DEVELOPER",
-    },
-  ] as const,
+  // Fallback shown when the API is unavailable.
+  experience: [] as { period: string; company: string; role: string }[],
 
   // ── Socials ───────────────────────────────────────────
+  // Fallback shown when the API is unavailable.
   socials: [
     { label: "GitHub",   href: "https://github.com/Ahmed-Wassim" },
-    { label: "LinkedIn", href: "https://linkedin.com/in/ahmedwassim" },
+    { label: "LinkedIn", href: "https://www.linkedin.com/in/ahmed-wassim-27651b259" },
   ] as const,
 
   // ── Empty / offline states ────────────────────────────
