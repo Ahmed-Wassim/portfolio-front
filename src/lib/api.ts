@@ -7,6 +7,10 @@ import type {
   Message,
   Project,
   ProjectInput,
+  Profile,
+  ProfileInput,
+  AboutItem,
+  AboutInput,
 } from "../types/api"
 import { ApiError } from "../types/api"
 
@@ -418,5 +422,110 @@ function unwrapSWR<T>(path: string, payload: unknown): T {
       unread_messages: asNumber(pick(raw, "unread_messages")),
     } as T
   }
+  if (path === "/api/profile" || path === "/api/admin/profile") {
+    return normalizeProfile(raw.profile) as T
+  }
+  if (path === "/api/about" || path === "/api/admin/about") {
+    const list = Array.isArray(raw.about) ? raw.about : []
+    return list.map(normalizeAboutItem) as T
+  }
+  if (path.startsWith("/api/admin/about/")) {
+    return normalizeAboutItem(raw.about) as T
+  }
   return payload as T
 }
+
+// ── Profile ──────────────────────────────────────────────────────────────────
+
+export function normalizeProfile(rawUnknown: unknown): Profile {
+  const raw = asRecord(rawUnknown)
+  const stackRaw = raw.stack
+  const stack = Array.isArray(stackRaw) ? stackRaw.map(asString) : []
+  return {
+    id: asNumber(pick(raw, "id", "ID")),
+    tagline: asString(pick(raw, "tagline")),
+    stack,
+    created_at: asString(pick(raw, "created_at", "CreatedAt")),
+    updated_at: asString(pick(raw, "updated_at", "UpdatedAt")),
+  }
+}
+
+export async function getProfile(): Promise<ApiResult<Profile>> {
+  const res = await request<{ profile?: unknown }>("/api/profile")
+  if (!res.ok) return res
+  return ok(normalizeProfile(res.data.profile), res.status)
+}
+
+export async function updateProfile(input: ProfileInput): Promise<ApiResult<Profile>> {
+  const res = await request<{ profile?: unknown }>("/api/admin/profile", {
+    method: "PUT",
+    auth: true,
+    json: input,
+  })
+  if (!res.ok) return res
+  return ok(normalizeProfile(res.data.profile), res.status)
+}
+
+// ── About ────────────────────────────────────────────────────────────────────
+
+export function normalizeAboutItem(rawUnknown: unknown): AboutItem {
+  const raw = asRecord(rawUnknown)
+  return {
+    id: asNumber(pick(raw, "id", "ID")),
+    title: asString(pick(raw, "title")),
+    content: asString(pick(raw, "content")),
+    sort: asNumber(pick(raw, "sort")),
+    created_at: asString(pick(raw, "created_at", "CreatedAt")),
+    updated_at: asString(pick(raw, "updated_at", "UpdatedAt")),
+  }
+}
+
+export async function listAbout(): Promise<ApiResult<AboutItem[]>> {
+  const res = await request<{ about?: unknown }>("/api/about")
+  if (!res.ok) return res
+  const list = Array.isArray(res.data.about) ? res.data.about : []
+  return ok(list.map(normalizeAboutItem), res.status)
+}
+
+export async function listAboutAdmin(): Promise<ApiResult<AboutItem[]>> {
+  const res = await request<{ about?: unknown }>("/api/admin/about", { auth: true })
+  if (!res.ok) return res
+  const list = Array.isArray(res.data.about) ? res.data.about : []
+  return ok(list.map(normalizeAboutItem), res.status)
+}
+
+export async function getAboutItem(id: number | string): Promise<ApiResult<AboutItem>> {
+  const res = await request<{ about?: unknown }>(`/api/admin/about/${id}`, { auth: true })
+  if (!res.ok) return res
+  return ok(normalizeAboutItem(res.data.about), res.status)
+}
+
+export async function createAboutItem(input: AboutInput): Promise<ApiResult<AboutItem>> {
+  const res = await request<{ about?: unknown }>("/api/admin/about", {
+    method: "POST",
+    auth: true,
+    json: input,
+  })
+  if (!res.ok) return res
+  return ok(normalizeAboutItem(res.data.about), res.status)
+}
+
+export async function updateAboutItem(
+  id: number | string,
+  input: AboutInput,
+): Promise<ApiResult<AboutItem>> {
+  const res = await request<{ about?: unknown }>(`/api/admin/about/${id}`, {
+    method: "PUT",
+    auth: true,
+    json: input,
+  })
+  if (!res.ok) return res
+  return ok(normalizeAboutItem(res.data.about), res.status)
+}
+
+export async function deleteAboutItem(id: number | string): Promise<ApiResult<unknown>> {
+  return request(`/api/admin/about/${id}`, { method: "DELETE", auth: true })
+}
+
+export const ADMIN_ABOUT_KEY = "/api/admin/about"
+export const ADMIN_PROFILE_KEY = "/api/admin/profile"
