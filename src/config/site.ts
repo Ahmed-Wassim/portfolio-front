@@ -46,7 +46,11 @@ export const site = {
   // ── About ─────────────────────────────────────────────
   // Fallback shown when the API is unavailable. Keep at least one entry.
   about: [
-    "Backend engineer focused on building reliable, scalable systems.",
+    "Backend engineer focused on building reliable, scalable systems that hold up under real-world pressure.",
+    "I work primarily with Go and Laravel, designing REST APIs and microservices backed by PostgreSQL and Redis.",
+    "I care about clean architecture — clear boundaries, minimal coupling, and code that the next person can actually read.",
+    "Currently working at Travware as a Backend Developer, shipping production features and improving internal tooling.",
+    "Outside of work I explore open-source projects, study distributed systems, and occasionally write about what I build.",
   ] as const,
 
   // ── Skills ────────────────────────────────────────────
