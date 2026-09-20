@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, FolderKanban, FileText, Inbox, LogOut } from "lucide-react"
+import { LayoutDashboard, FolderKanban, FileText, Inbox, LogOut, User, BookOpen } from "lucide-react"
 import { clearToken } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
@@ -12,6 +12,8 @@ interface SidebarProps {
 
 const nav = [
   { label: "DASHBOARD", href: "/admin", icon: LayoutDashboard, exact: true },
+  { label: "PROFILE", href: "/admin/profile", icon: User, exact: false },
+  { label: "ABOUT", href: "/admin/about", icon: BookOpen, exact: false },
   { label: "PROJECTS", href: "/admin/projects", icon: FolderKanban, exact: false },
   { label: "ARTICLES", href: "/admin/articles", icon: FileText, exact: false },
   { label: "MESSAGES", href: "/admin/messages", icon: Inbox, exact: false },
