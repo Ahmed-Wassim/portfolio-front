@@ -24,16 +24,19 @@ export function Header() {
     <header className="sticky top-0 z-40 border-b-2 border-[var(--ink)] bg-[var(--panel)]">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6">
 
-        {/* Window-bar title + traffic-light dots */}
+        {/* Window-bar title + traffic-light dots — clicking title goes home */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="flex items-center gap-1.5" aria-hidden="true">
             <span className="w-3 h-3 rounded-full bg-[var(--danger)] border border-[var(--ink)]" />
             <span className="w-3 h-3 rounded-full bg-[var(--main)] border border-[var(--ink)]" />
             <span className="w-3 h-3 rounded-full bg-[var(--status-online)] border border-[var(--ink)]" />
           </div>
-          <span className="font-mono font-bold text-sm tracking-tight truncate">
+          <Link
+            href="/"
+            className="font-mono font-bold text-sm tracking-tight truncate flash-blue focus-brutal"
+          >
             {site.windowTitle}
-          </span>
+          </Link>
         </div>
 
         {/* Nav — pushed to the right */}
