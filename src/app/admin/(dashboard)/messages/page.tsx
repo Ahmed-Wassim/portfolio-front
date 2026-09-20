@@ -6,13 +6,14 @@ import { toast } from "sonner"
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { swrFetcher, markMessageRead } from "@/lib/api"
 import { EmptyState } from "@/components/admin/EmptyState"
+import { ApiErrorBanner } from "@/components/admin/ApiErrorBanner"
 import { formatLogDate } from "@/lib/utils"
 import type { Message } from "@/types/api"
 
 const MESSAGES_KEY = "/api/admin/messages"
 
 export default function AdminMessagesPage() {
-  const { data: messages, isLoading, mutate } = useSWR<Message[]>(
+  const { data: messages, isLoading, error, mutate } = useSWR<Message[]>(
     MESSAGES_KEY,
     swrFetcher,
     { shouldRetryOnError: false }
@@ -64,11 +65,13 @@ export default function AdminMessagesPage() {
         </div>
       )}
 
-      {!isLoading && (!messages || messages.length === 0) && (
+      {error && !isLoading && <ApiErrorBanner />}
+
+      {!isLoading && !error && (!messages || messages.length === 0) && (
         <EmptyState label="No messages yet." />
       )}
 
-      {!isLoading && messages && messages.length > 0 && (
+      {!isLoading && !error && messages && messages.length > 0 && (
         <div className="border-brutal overflow-hidden">
           {messages.map((msg, i) => {
             const isExpanded = expanded === msg.id

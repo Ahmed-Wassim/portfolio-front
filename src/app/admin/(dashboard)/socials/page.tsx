@@ -7,10 +7,11 @@ import { toast } from "sonner"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import { swrFetcher, deleteSocial, ADMIN_SOCIALS_KEY } from "@/lib/api"
 import { EmptyState } from "@/components/admin/EmptyState"
+import { ApiErrorBanner } from "@/components/admin/ApiErrorBanner"
 import type { Social } from "@/types/api"
 
 export default function AdminSocialsPage() {
-  const { data: items, isLoading, mutate } = useSWR<Social[]>(
+  const { data: items, isLoading, error, mutate } = useSWR<Social[]>(
     ADMIN_SOCIALS_KEY, swrFetcher, { shouldRetryOnError: false }
   )
   const [deletingId, setDeletingId] = useState<number | null>(null)
@@ -42,11 +43,13 @@ export default function AdminSocialsPage() {
         </div>
       )}
 
-      {!isLoading && (!items || items.length === 0) && (
+      {error && !isLoading && <ApiErrorBanner />}
+
+      {!isLoading && !error && (!items || items.length === 0) && (
         <EmptyState label="No socials yet." />
       )}
 
-      {!isLoading && items && items.length > 0 && (
+      {!isLoading && !error && items && items.length > 0 && (
         <div className="border-brutal overflow-hidden">
           {items.map((item, i) => (
             <div

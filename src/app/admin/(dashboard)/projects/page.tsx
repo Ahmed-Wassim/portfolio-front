@@ -7,10 +7,11 @@ import { toast } from "sonner"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import { swrFetcher, deleteProject, ADMIN_PROJECTS_KEY } from "@/lib/api"
 import { EmptyState } from "@/components/admin/EmptyState"
+import { ApiErrorBanner } from "@/components/admin/ApiErrorBanner"
 import type { Project } from "@/types/api"
 
 export default function AdminProjectsPage() {
-  const { data: projects, isLoading, mutate } = useSWR<Project[]>(
+  const { data: projects, isLoading, error, mutate } = useSWR<Project[]>(
     ADMIN_PROJECTS_KEY,
     swrFetcher,
     { shouldRetryOnError: false }
@@ -66,11 +67,13 @@ export default function AdminProjectsPage() {
         </div>
       )}
 
-      {!isLoading && filtered.length === 0 && (
+      {error && !isLoading && <ApiErrorBanner />}
+
+      {!isLoading && !error && filtered.length === 0 && (
         <EmptyState label={search ? "No projects match your search." : "No projects yet."} />
       )}
 
-      {!isLoading && filtered.length > 0 && (
+      {!isLoading && !error && filtered.length > 0 && (
         <div className="border-brutal overflow-hidden">
           {filtered.map((project, i) => (
             <div

@@ -7,10 +7,11 @@ import { toast } from "sonner"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import { swrFetcher, deleteExperience, ADMIN_EXPERIENCES_KEY } from "@/lib/api"
 import { EmptyState } from "@/components/admin/EmptyState"
+import { ApiErrorBanner } from "@/components/admin/ApiErrorBanner"
 import type { Experience } from "@/types/api"
 
 export default function AdminExperiencesPage() {
-  const { data: items, isLoading, mutate } = useSWR<Experience[]>(
+  const { data: items, isLoading, error, mutate } = useSWR<Experience[]>(
     ADMIN_EXPERIENCES_KEY, swrFetcher, { shouldRetryOnError: false }
   )
   const [deletingId, setDeletingId] = useState<number | null>(null)
@@ -44,11 +45,13 @@ export default function AdminExperiencesPage() {
         </div>
       )}
 
-      {!isLoading && (!items || items.length === 0) && (
+      {error && !isLoading && <ApiErrorBanner />}
+
+      {!isLoading && !error && (!items || items.length === 0) && (
         <EmptyState label="No experience entries yet." />
       )}
 
-      {!isLoading && items && items.length > 0 && (
+      {!isLoading && !error && items && items.length > 0 && (
         <div className="border-brutal overflow-hidden">
           {items.map((item, i) => (
             <div

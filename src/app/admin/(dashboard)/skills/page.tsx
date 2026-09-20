@@ -18,6 +18,7 @@ import {
   ADMIN_SKILLS_KEY,
 } from "@/lib/api"
 import { EmptyState } from "@/components/admin/EmptyState"
+import { ApiErrorBanner } from "@/components/admin/ApiErrorBanner"
 import type { SkillCategory, Skill } from "@/types/api"
 
 const catSchema = z.object({ name: z.string().min(1, "Required"), sort: z.number() })
@@ -31,7 +32,7 @@ type SkillValues = z.infer<typeof skillSchema>
 
 export default function AdminSkillsPage() {
   const { mutate } = useSWRConfig()
-  const { data: categories, isLoading } = useSWR<SkillCategory[]>(
+  const { data: categories, isLoading, error: catError } = useSWR<SkillCategory[]>(
     ADMIN_SKILL_CATEGORIES_KEY, swrFetcher, { shouldRetryOnError: false }
   )
   const { data: skills } = useSWR<Skill[]>(
@@ -132,11 +133,13 @@ export default function AdminSkillsPage() {
         </div>
       )}
 
-      {!isLoading && (!categories || categories.length === 0) && (
+      {catError && !isLoading && <ApiErrorBanner />}
+
+      {!isLoading && !catError && (!categories || categories.length === 0) && (
         <EmptyState label="No skill categories yet." />
       )}
 
-      {!isLoading && categories && categories.length > 0 && (
+      {!isLoading && !catError && categories && categories.length > 0 && (
         <div className="border-brutal overflow-hidden">
           {categories.map((cat, i) => {
             const catSkills = (skills ?? []).filter((s) => s.category_id === cat.id)

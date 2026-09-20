@@ -7,12 +7,13 @@ import { toast } from "sonner"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import { swrFetcher, deleteArticle } from "@/lib/api"
 import { EmptyState } from "@/components/admin/EmptyState"
+import { ApiErrorBanner } from "@/components/admin/ApiErrorBanner"
 import type { Article } from "@/types/api"
 
 const ARTICLES_KEY = "/api/admin/articles"
 
 export default function AdminArticlesPage() {
-  const { data: articles, isLoading, mutate } = useSWR<Article[]>(
+  const { data: articles, isLoading, error, mutate } = useSWR<Article[]>(
     ARTICLES_KEY,
     swrFetcher,
     { shouldRetryOnError: false }
@@ -68,11 +69,13 @@ export default function AdminArticlesPage() {
         </div>
       )}
 
-      {!isLoading && filtered.length === 0 && (
+      {error && !isLoading && <ApiErrorBanner />}
+
+      {!isLoading && !error && filtered.length === 0 && (
         <EmptyState label={search ? "No articles match your search." : "No articles yet."} />
       )}
 
-      {!isLoading && filtered.length > 0 && (
+      {!isLoading && !error && filtered.length > 0 && (
         <div className="border-brutal overflow-hidden">
           {filtered.map((article, i) => (
             <div
