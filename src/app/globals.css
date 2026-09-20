@@ -326,10 +326,37 @@ body {
   border: 2px solid var(--ink);
 }
 
-/* ── Responsive ───────────────────────────────────── */
+/* ── PageLoader animation ─────────────────────────── */
+@keyframes loader-bar {
+  0%, 100% { transform: scaleY(0.35); opacity: 0.35; }
+  50%       { transform: scaleY(1);   opacity: 1;    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader-bar {
+    animation: none !important;
+    transform: scaleY(1) !important;
+    opacity: 0.6 !important;
+  }
+}
+
+/* Admin content area navigation strip */
+@keyframes nav-strip {
+  0%   { width: 0%;   opacity: 1; }
+  70%  { width: 85%;  opacity: 1; }
+  100% { width: 100%; opacity: 0; }
+}
 
 /* Stack header nav items on small screens is handled via flex-wrap in JSX.
    320px title truncation is handled via `truncate` class in Header. */
+
+@media (max-width: 640px) {
+  .hide-sm {
+    display: none !important;
+  }
+}
+
+/* ── Responsive ───────────────────────────────────── */
 
 @media (max-width: 640px) {
   .hide-sm {

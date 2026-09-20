@@ -1,35 +1,37 @@
-export function PageLoader() {
+interface PageLoaderProps {
+  /** "full" = fixed overlay (initial page load), "inline" = fills parent container */
+  variant?: "full" | "inline"
+}
+
+export function PageLoader({ variant = "full" }: PageLoaderProps) {
+  const isInline = variant === "inline"
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[var(--bg)]">
-      {/* Animated bars — brutalist mechanical feel */}
-      <div className="flex items-end gap-1.5" aria-hidden="true">
+    <div
+      className={
+        isInline
+          ? "flex flex-col items-center justify-center w-full h-full min-h-64 gap-5"
+          : "fixed inset-0 z-50 flex flex-col items-center justify-center bg-[var(--bg)] gap-5"
+      }
+      role="status"
+      aria-label="Loading"
+    >
+      <div className="flex items-end gap-[5px]" aria-hidden="true">
         {[0, 1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="w-2 bg-[var(--ink)]"
+            className="loader-bar w-[7px] bg-[var(--ink)] rounded-none"
             style={{
-              height: "2rem",
-              animation: `loader-bar 0.8s ease-in-out infinite`,
-              animationDelay: `${i * 0.12}s`,
+              height: "28px",
+              animation: "loader-bar 0.75s ease-in-out infinite",
+              animationDelay: `${i * 0.11}s`,
             }}
           />
         ))}
       </div>
-      <p className="font-mono text-xs tracking-[0.3em] text-[var(--muted)] mt-6 uppercase">
+      <p className="font-mono text-[10px] tracking-[0.35em] text-[var(--muted)] uppercase select-none">
         Loading
       </p>
-
-      <style>{`
-        @keyframes loader-bar {
-          0%, 100% { transform: scaleY(0.4); opacity: 0.4; }
-          50%       { transform: scaleY(1);   opacity: 1;   }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          @keyframes loader-bar {
-            0%, 100% { transform: none; opacity: 0.8; }
-          }
-        }
-      `}</style>
     </div>
   )
 }
