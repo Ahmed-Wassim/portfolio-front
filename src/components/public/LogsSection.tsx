@@ -2,7 +2,7 @@ import Link from "next/link"
 import { site } from "@/config/site"
 import { StatusPill } from "@/components/public/StatusPill"
 import { Reveal } from "@/components/ui/Reveal"
-import { formatLogDate } from "@/lib/utils"
+import { formatLogDate, readingTime } from "@/lib/utils"
 import type { Article } from "@/types/api"
 
 interface LogsSectionProps {
@@ -59,8 +59,11 @@ export function LogsSection({ articles, offline }: LogsSectionProps) {
                   <span className="font-mono text-xs text-[var(--muted)] shrink-0 tracking-widest">
                     [{formatLogDate(article.created_at)}]
                   </span>
-                  <span className="font-mono text-sm font-bold tracking-tight group-hover:text-[var(--secondary)] transition-colors line-clamp-1">
+                  <span className="font-mono text-sm font-bold tracking-tight group-hover:text-[var(--secondary)] transition-colors line-clamp-1 flex-1">
                     {article.title}
+                  </span>
+                  <span className="font-mono text-xs text-[var(--muted)] shrink-0 hidden sm:block">
+                    {readingTime(article.content)}
                   </span>
                 </Link>
               </Reveal>
