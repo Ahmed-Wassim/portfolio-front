@@ -8,6 +8,7 @@ import { SkillsSection } from "@/components/public/SkillsSection"
 import { ExperienceSection } from "@/components/public/ExperienceSection"
 import { HireMeSection } from "@/components/public/HireMeSection"
 import { Footer } from "@/components/public/Footer"
+import { BackToTop } from "@/components/ui/BackToTop"
 import {
   listProjects,
   listArticles,
@@ -93,6 +94,7 @@ export default async function Home() {
         <HireMeSection />
       </main>
       <Footer socials={socialLinks} />
+      <BackToTop />
     </>
   )
 }

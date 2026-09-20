@@ -5,12 +5,32 @@ import { getProject, uploadUrl } from "@/lib/api"
 import { PlaceholderBlock } from "@/components/public/PlaceholderBlock"
 import { Header } from "@/components/public/Header"
 import { Footer } from "@/components/public/Footer"
+import { BackToTop } from "@/components/ui/BackToTop"
 
 interface Props {
   params: Promise<{ id: string }>
 }
 
 export const dynamic = "force-dynamic"
+
+export async function generateMetadata({ params }: Props) {
+  const { id } = await params
+  const result = await getProject(id)
+  if (!result.ok) return {}
+  const p = result.data
+  const img = uploadUrl(p.image)
+  return {
+    title: `${p.title} — AHMEDWASSIM.exe`,
+    description: p.description.slice(0, 160),
+    openGraph: {
+      title: p.title,
+      description: p.description.slice(0, 160),
+      type: "website",
+      ...(img ? { images: [{ url: img }] } : {}),
+    },
+    twitter: { card: "summary_large_image", title: p.title },
+  }
+}
 
 export default async function ProjectPage({ params }: Props) {
   const { id } = await params
@@ -85,6 +105,7 @@ export default async function ProjectPage({ params }: Props) {
         </div>
       </main>
       <Footer />
+      <BackToTop />
     </>
   )
 }
