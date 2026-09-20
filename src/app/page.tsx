@@ -8,59 +8,76 @@ import { SkillsSection } from "@/components/public/SkillsSection"
 import { ExperienceSection } from "@/components/public/ExperienceSection"
 import { HireMeSection } from "@/components/public/HireMeSection"
 import { Footer } from "@/components/public/Footer"
-import { listProjects, listArticles, getProfile, listAbout } from "@/lib/api"
+import {
+  listProjects,
+  listArticles,
+  getProfile,
+  listAbout,
+  listSkills,
+  listExperiences,
+  listSocials,
+} from "@/lib/api"
 import { site } from "@/config/site"
-import type { Project, Article, Profile, AboutItem } from "@/types/api"
+import type { Project, Article, Profile, AboutItem, SkillCategory, Experience, Social } from "@/types/api"
 
 export const dynamic = "force-dynamic"
 
+async function safeFetch<T>(fn: () => Promise<{ ok: boolean; data: T | null }>): Promise<T | null> {
+  try {
+    const res = await fn()
+    return res.ok ? res.data : null
+  } catch {
+    return null
+  }
+}
+
 export default async function Home() {
-  // All fetches are independent — one failure never blanks the whole poster
-  let projects: Project[] | null = null
-  let projectsOffline = false
-  let articles: Article[] | null = null
-  let articlesOffline = false
-  let profile: Profile | null = null
-  let aboutItems: AboutItem[] | null = null
+  // All fetches independent — one failure never blanks the whole poster
+  const [
+    projectsResult,
+    articlesResult,
+    profile,
+    aboutItems,
+    skillCategories,
+    experiences,
+    socials,
+  ] = await Promise.allSettled([
+    listProjects(),
+    listArticles(),
+    safeFetch(getProfile),
+    safeFetch(listAbout),
+    safeFetch(listSkills),
+    safeFetch(listExperiences),
+    safeFetch(listSocials),
+  ])
 
-  try {
-    const res = await listProjects()
-    if (res.ok) projects = res.data
-    else projectsOffline = true
-  } catch {
-    projectsOffline = true
-  }
+  const projects = projectsResult.status === "fulfilled" && projectsResult.value.ok
+    ? projectsResult.value.data as Project[]
+    : null
+  const projectsOffline = projects === null
 
-  try {
-    const res = await listArticles()
-    if (res.ok) articles = res.data
-    else articlesOffline = true
-  } catch {
-    articlesOffline = true
-  }
+  const articles = articlesResult.status === "fulfilled" && articlesResult.value.ok
+    ? articlesResult.value.data as Article[]
+    : null
+  const articlesOffline = articles === null
 
-  try {
-    const res = await getProfile()
-    if (res.ok) profile = res.data
-  } catch {
-    // fall back to site.ts values below
-  }
-
-  try {
-    const res = await listAbout()
-    if (res.ok) aboutItems = res.data
-  } catch {
-    // fall back to site.ts values below
-  }
+  const profileData = profile.status === "fulfilled" ? profile.value as Profile | null : null
+  const aboutData = aboutItems.status === "fulfilled" ? aboutItems.value as AboutItem[] | null : null
+  const skillsData = skillCategories.status === "fulfilled" ? skillCategories.value as SkillCategory[] | null : null
+  const experiencesData = experiences.status === "fulfilled" ? experiences.value as Experience[] | null : null
+  const socialsData = socials.status === "fulfilled" ? socials.value as Social[] | null : null
 
   const apiOnline = !projectsOffline && !articlesOffline
 
-  // Fall back to static config when API is unavailable
-  const tagline = profile?.tagline ?? site.tagline
-  const stack = profile?.stack.length ? profile.stack : [...site.stack]
-  const aboutParagraphs: string[] = aboutItems?.length
-    ? aboutItems.map((a) => a.content)
-    : [...site.about]
+  // Fall back to site.ts when API unavailable
+  const tagline = profileData?.tagline ?? site.tagline
+  const stack = profileData?.stack.length ? profileData.stack : [...site.stack]
+  const aboutParagraphs = aboutData?.length ? aboutData.map((a) => a.content) : [...site.about]
+  const skillCategoryList = skillsData ?? []
+  const experienceList = experiencesData ?? []
+  const socialLinks = socialsData?.length
+    ? socialsData.map((s) => ({ label: s.platform, href: s.url }))
+    : [...site.socials]
 
   return (
     <>
@@ -71,11 +88,11 @@ export default async function Home() {
         <WorkSection projects={projects} offline={projectsOffline} />
         <LogsSection articles={articles} offline={articlesOffline} />
         <AboutSection paragraphs={aboutParagraphs} />
-        <SkillsSection />
-        <ExperienceSection />
+        <SkillsSection categories={skillCategoryList} />
+        <ExperienceSection experiences={experienceList} />
         <HireMeSection />
       </main>
-      <Footer />
+      <Footer socials={socialLinks} />
     </>
   )
 }
