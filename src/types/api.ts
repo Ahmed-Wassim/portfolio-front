@@ -93,6 +93,78 @@ export type ContactInput = {
   body: string
 }
 
+export type SkillCategory = {
+  id: number
+  name: string
+  sort: number
+  skills: Skill[]
+  created_at: string
+  updated_at: string
+}
+
+export type Skill = {
+  id: number
+  name: string
+  category_id: number
+  sort: number
+  created_at: string
+  updated_at: string
+}
+
+export type Experience = {
+  id: number
+  company: string
+  role: string
+  period: string
+  description: string
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
+export type Social = {
+  id: number
+  platform: string
+  url: string
+  icon: string
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
+export type CV = {
+  id: number
+  file_name: string
+  created_at: string
+  updated_at: string
+}
+
+export type SkillCategoryInput = {
+  name: string
+  sort?: number
+}
+
+export type SkillInput = {
+  name: string
+  category_id: number
+  sort?: number
+}
+
+export type ExperienceInput = {
+  company: string
+  role: string
+  period: string
+  description?: string
+  sort_order?: number
+}
+
+export type SocialInput = {
+  platform: string
+  url: string
+  icon?: string
+  sort_order?: number
+}
+
 export class ApiError extends Error {
   status: number
 
