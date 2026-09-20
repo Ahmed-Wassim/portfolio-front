@@ -11,6 +11,15 @@ import type {
   ProfileInput,
   AboutItem,
   AboutInput,
+  SkillCategory,
+  Skill,
+  SkillCategoryInput,
+  SkillInput,
+  Experience,
+  ExperienceInput,
+  Social,
+  SocialInput,
+  CV,
 } from "../types/api"
 import { ApiError } from "../types/api"
 
@@ -432,6 +441,32 @@ function unwrapSWR<T>(path: string, payload: unknown): T {
   if (path.startsWith("/api/admin/about/")) {
     return normalizeAboutItem(raw.about) as T
   }
+  if (path === "/api/skills") {
+    const list = Array.isArray(raw.categories) ? raw.categories : []
+    return list.map(normalizeSkillCategory) as T
+  }
+  if (path === "/api/admin/skill-categories") {
+    const list = Array.isArray(raw.skill_categories) ? raw.skill_categories : []
+    return list.map(normalizeSkillCategory) as T
+  }
+  if (path === "/api/admin/skills") {
+    const list = Array.isArray(raw.skills) ? raw.skills : []
+    return list.map(normalizeSkill) as T
+  }
+  if (path === "/api/experiences" || path === "/api/admin/experiences") {
+    const list = Array.isArray(raw.experiences) ? raw.experiences : []
+    return list.map(normalizeExperience) as T
+  }
+  if (path.startsWith("/api/admin/experiences/")) {
+    return normalizeExperience(raw.experience) as T
+  }
+  if (path === "/api/socials" || path === "/api/admin/socials") {
+    const list = Array.isArray(raw.socials) ? raw.socials : []
+    return list.map(normalizeSocial) as T
+  }
+  if (path.startsWith("/api/admin/socials/")) {
+    return normalizeSocial(raw.social) as T
+  }
   return payload as T
 }
 
@@ -529,3 +564,220 @@ export async function deleteAboutItem(id: number | string): Promise<ApiResult<un
 
 export const ADMIN_ABOUT_KEY = "/api/admin/about"
 export const ADMIN_PROFILE_KEY = "/api/admin/profile"
+
+// ── Skills ───────────────────────────────────────────────────────────────────
+
+export function normalizeSkill(rawUnknown: unknown): Skill {
+  const raw = asRecord(rawUnknown)
+  return {
+    id: asNumber(pick(raw, "id", "ID")),
+    name: asString(pick(raw, "name")),
+    category_id: asNumber(pick(raw, "category_id")),
+    sort: asNumber(pick(raw, "sort")),
+    created_at: asString(pick(raw, "created_at", "CreatedAt")),
+    updated_at: asString(pick(raw, "updated_at", "UpdatedAt")),
+  }
+}
+
+export function normalizeSkillCategory(rawUnknown: unknown): SkillCategory {
+  const raw = asRecord(rawUnknown)
+  const skillsRaw = Array.isArray(raw.skills) ? raw.skills : []
+  return {
+    id: asNumber(pick(raw, "id", "ID")),
+    name: asString(pick(raw, "name")),
+    sort: asNumber(pick(raw, "sort")),
+    skills: skillsRaw.map(normalizeSkill),
+    created_at: asString(pick(raw, "created_at", "CreatedAt")),
+    updated_at: asString(pick(raw, "updated_at", "UpdatedAt")),
+  }
+}
+
+export async function listSkills(): Promise<ApiResult<SkillCategory[]>> {
+  const res = await request<{ categories?: unknown }>("/api/skills")
+  if (!res.ok) return res
+  const list = Array.isArray(res.data.categories) ? res.data.categories : []
+  return ok(list.map(normalizeSkillCategory), res.status)
+}
+
+export const ADMIN_SKILL_CATEGORIES_KEY = "/api/admin/skill-categories"
+export const ADMIN_SKILLS_KEY = "/api/admin/skills"
+
+export async function listSkillCategoriesAdmin(): Promise<ApiResult<SkillCategory[]>> {
+  const res = await request<{ skill_categories?: unknown }>("/api/admin/skill-categories", { auth: true })
+  if (!res.ok) return res
+  const list = Array.isArray(res.data.skill_categories) ? res.data.skill_categories : []
+  return ok(list.map(normalizeSkillCategory), res.status)
+}
+
+export async function createSkillCategory(input: SkillCategoryInput): Promise<ApiResult<SkillCategory>> {
+  const res = await request<{ skill_category?: unknown }>("/api/admin/skill-categories", {
+    method: "POST", auth: true, json: input,
+  })
+  if (!res.ok) return res
+  return ok(normalizeSkillCategory(res.data.skill_category), res.status)
+}
+
+export async function updateSkillCategory(id: number | string, input: SkillCategoryInput): Promise<ApiResult<SkillCategory>> {
+  const res = await request<{ skill_category?: unknown }>(`/api/admin/skill-categories/${id}`, {
+    method: "PUT", auth: true, json: input,
+  })
+  if (!res.ok) return res
+  return ok(normalizeSkillCategory(res.data.skill_category), res.status)
+}
+
+export async function deleteSkillCategory(id: number | string): Promise<ApiResult<unknown>> {
+  return request(`/api/admin/skill-categories/${id}`, { method: "DELETE", auth: true })
+}
+
+export async function listSkillsAdmin(): Promise<ApiResult<Skill[]>> {
+  const res = await request<{ skills?: unknown }>("/api/admin/skills", { auth: true })
+  if (!res.ok) return res
+  const list = Array.isArray(res.data.skills) ? res.data.skills : []
+  return ok(list.map(normalizeSkill), res.status)
+}
+
+export async function createSkill(input: SkillInput): Promise<ApiResult<Skill>> {
+  const res = await request<{ skill?: unknown }>("/api/admin/skills", {
+    method: "POST", auth: true, json: input,
+  })
+  if (!res.ok) return res
+  return ok(normalizeSkill(res.data.skill), res.status)
+}
+
+export async function updateSkill(id: number | string, input: SkillInput): Promise<ApiResult<Skill>> {
+  const res = await request<{ skill?: unknown }>(`/api/admin/skills/${id}`, {
+    method: "PUT", auth: true, json: input,
+  })
+  if (!res.ok) return res
+  return ok(normalizeSkill(res.data.skill), res.status)
+}
+
+export async function deleteSkill(id: number | string): Promise<ApiResult<unknown>> {
+  return request(`/api/admin/skills/${id}`, { method: "DELETE", auth: true })
+}
+
+// ── Experiences ───────────────────────────────────────────────────────────────
+
+export function normalizeExperience(rawUnknown: unknown): Experience {
+  const raw = asRecord(rawUnknown)
+  return {
+    id: asNumber(pick(raw, "id", "ID")),
+    company: asString(pick(raw, "company")),
+    role: asString(pick(raw, "role")),
+    period: asString(pick(raw, "period")),
+    description: asString(pick(raw, "description")),
+    sort_order: asNumber(pick(raw, "sort_order")),
+    created_at: asString(pick(raw, "created_at", "CreatedAt")),
+    updated_at: asString(pick(raw, "updated_at", "UpdatedAt")),
+  }
+}
+
+export const ADMIN_EXPERIENCES_KEY = "/api/admin/experiences"
+
+export async function listExperiences(): Promise<ApiResult<Experience[]>> {
+  const res = await request<{ experiences?: unknown }>("/api/experiences")
+  if (!res.ok) return res
+  const list = Array.isArray(res.data.experiences) ? res.data.experiences : []
+  return ok(list.map(normalizeExperience), res.status)
+}
+
+export async function getExperienceAdmin(id: number | string): Promise<ApiResult<Experience>> {
+  const res = await request<{ experience?: unknown }>(`/api/admin/experiences/${id}`, { auth: true })
+  if (!res.ok) return res
+  return ok(normalizeExperience(res.data.experience), res.status)
+}
+
+export async function createExperience(input: ExperienceInput): Promise<ApiResult<Experience>> {
+  const res = await request<{ experience?: unknown }>("/api/admin/experiences", {
+    method: "POST", auth: true, json: input,
+  })
+  if (!res.ok) return res
+  return ok(normalizeExperience(res.data.experience), res.status)
+}
+
+export async function updateExperience(id: number | string, input: ExperienceInput): Promise<ApiResult<Experience>> {
+  const res = await request<{ experience?: unknown }>(`/api/admin/experiences/${id}`, {
+    method: "PUT", auth: true, json: input,
+  })
+  if (!res.ok) return res
+  return ok(normalizeExperience(res.data.experience), res.status)
+}
+
+export async function deleteExperience(id: number | string): Promise<ApiResult<unknown>> {
+  return request(`/api/admin/experiences/${id}`, { method: "DELETE", auth: true })
+}
+
+// ── Socials ───────────────────────────────────────────────────────────────────
+
+export function normalizeSocial(rawUnknown: unknown): Social {
+  const raw = asRecord(rawUnknown)
+  return {
+    id: asNumber(pick(raw, "id", "ID")),
+    platform: asString(pick(raw, "platform")),
+    url: asString(pick(raw, "url")),
+    icon: asString(pick(raw, "icon")),
+    sort_order: asNumber(pick(raw, "sort_order")),
+    created_at: asString(pick(raw, "created_at", "CreatedAt")),
+    updated_at: asString(pick(raw, "updated_at", "UpdatedAt")),
+  }
+}
+
+export const ADMIN_SOCIALS_KEY = "/api/admin/socials"
+
+export async function listSocials(): Promise<ApiResult<Social[]>> {
+  const res = await request<{ socials?: unknown }>("/api/socials")
+  if (!res.ok) return res
+  const list = Array.isArray(res.data.socials) ? res.data.socials : []
+  return ok(list.map(normalizeSocial), res.status)
+}
+
+export async function getSocialAdmin(id: number | string): Promise<ApiResult<Social>> {
+  const res = await request<{ social?: unknown }>(`/api/admin/socials/${id}`, { auth: true })
+  if (!res.ok) return res
+  return ok(normalizeSocial(res.data.social), res.status)
+}
+
+export async function createSocial(input: SocialInput): Promise<ApiResult<Social>> {
+  const res = await request<{ social?: unknown }>("/api/admin/socials", {
+    method: "POST", auth: true, json: input,
+  })
+  if (!res.ok) return res
+  return ok(normalizeSocial(res.data.social), res.status)
+}
+
+export async function updateSocial(id: number | string, input: SocialInput): Promise<ApiResult<Social>> {
+  const res = await request<{ social?: unknown }>(`/api/admin/socials/${id}`, {
+    method: "PUT", auth: true, json: input,
+  })
+  if (!res.ok) return res
+  return ok(normalizeSocial(res.data.social), res.status)
+}
+
+export async function deleteSocial(id: number | string): Promise<ApiResult<unknown>> {
+  return request(`/api/admin/socials/${id}`, { method: "DELETE", auth: true })
+}
+
+// ── CV ────────────────────────────────────────────────────────────────────────
+
+export function cvDownloadUrl(): string {
+  return `${apiBase()}/api/cv`
+}
+
+export async function uploadCV(file: File): Promise<ApiResult<CV>> {
+  const data = new FormData()
+  data.append("cv", file)
+  const res = await request<{ cv?: unknown }>("/api/admin/cv", {
+    method: "POST", auth: true, body: data,
+  })
+  if (!res.ok) return res
+  const raw = asRecord(res.data.cv)
+  return ok(
+    {
+      id: asNumber(pick(raw, "id", "ID")),
+      file_name: asString(pick(raw, "file_name", "FileName")),
+      created_at: asString(pick(raw, "created_at", "CreatedAt")),
+      updated_at: asString(pick(raw, "updated_at", "UpdatedAt")),
+    },
+    res.status,
+  )
+}
