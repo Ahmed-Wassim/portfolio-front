@@ -1,16 +1,41 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Download, Loader2 } from "lucide-react"
+import { ArrowLeft, Download } from "lucide-react"
 import { cvDownloadUrl } from "@/lib/api"
 import { Header } from "@/components/public/Header"
 import { Footer } from "@/components/public/Footer"
+import { PageLoader } from "@/components/ui/PageLoader"
+
+type State = "loading" | "ready" | "failed"
 
 export default function CVPage() {
-  const [loaded, setLoaded] = useState(false)
-  const [failed, setFailed] = useState(false)
+  const [state, setState] = useState<State>("loading")
+  const [blobUrl, setBlobUrl] = useState<string | null>(null)
   const cvUrl = cvDownloadUrl()
+
+  useEffect(() => {
+    let objectUrl: string | null = null
+
+    fetch(cvUrl)
+      .then((res) => {
+        if (!res.ok) throw new Error("not found")
+        return res.blob()
+      })
+      .then((blob) => {
+        // Force inline display — override the server's Content-Disposition: attachment
+        const inlineBlob = new Blob([blob], { type: "application/pdf" })
+        objectUrl = URL.createObjectURL(inlineBlob)
+        setBlobUrl(objectUrl)
+        setState("ready")
+      })
+      .catch(() => setState("failed"))
+
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [cvUrl])
 
   return (
     <>
@@ -28,8 +53,7 @@ export default function CVPage() {
 
           <a
             href={cvUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+            download="AhmedWassim_CV.pdf"
             className="btn-brutal btn-brutal-ink focus-brutal inline-flex items-center gap-2"
           >
             <Download size={14} aria-hidden="true" />
@@ -43,63 +67,53 @@ export default function CVPage() {
         </div>
 
         {/* Viewer */}
-        <div className="border-brutal shadow-brutal-lg bg-[var(--panel)] overflow-hidden relative"
-          style={{ minHeight: "80vh" }}
+        <div
+          className="border-brutal shadow-brutal-lg bg-[var(--panel)] overflow-hidden relative"
+          style={{ minHeight: "82vh" }}
         >
-          {/* Loader — shown while iframe loads */}
-          {!loaded && !failed && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[var(--panel)] z-10">
-              <Loader2
-                size={36}
-                className="animate-spin text-[var(--ink)]"
-                aria-hidden="true"
-              />
-              <p className="font-mono text-xs tracking-widest text-[var(--muted)]">
-                LOADING CV…
+          {/* Loading */}
+          {state === "loading" && (
+            <div className="absolute inset-0 z-10">
+              <PageLoader variant="inline" />
+            </div>
+          )}
+
+          {/* Failed */}
+          {state === "failed" && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[var(--panel)] z-10 p-8">
+              <p className="font-mono text-sm font-bold text-[var(--danger)]">CV NOT AVAILABLE</p>
+              <p className="font-mono text-xs text-[var(--muted)] text-center">
+                No CV has been uploaded yet. Check back later or contact me directly.
               </p>
+              <Link href="/#hire" className="btn-brutal btn-brutal-main focus-brutal mt-2">
+                CONTACT ME
+              </Link>
             </div>
           )}
 
-          {/* Failed state */}
-          {failed && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[var(--panel)] z-10">
-              <p className="font-mono text-sm font-bold text-[var(--danger)]">CV NOT FOUND</p>
-              <p className="font-mono text-xs text-[var(--muted)]">No CV has been uploaded yet.</p>
-              <a
-                href="/"
-                className="btn-brutal btn-brutal-panel focus-brutal mt-2"
-              >
-                GO HOME
-              </a>
-            </div>
+          {/* Inline PDF viewer via blob URL */}
+          {state === "ready" && blobUrl && (
+            <iframe
+              src={`${blobUrl}#toolbar=1&navpanes=0&view=FitH`}
+              title="Curriculum Vitae"
+              className="w-full border-0"
+              style={{ height: "82vh" }}
+            />
           )}
-
-          <iframe
-            src={`${cvUrl}#toolbar=1&navpanes=0&view=FitH`}
-            title="Curriculum Vitae"
-            className="w-full border-0"
-            style={{
-              height: "80vh",
-              display: failed ? "none" : "block",
-              opacity: loaded ? 1 : 0,
-              transition: "opacity 300ms ease",
-            }}
-            onLoad={() => setLoaded(true)}
-            onError={() => setFailed(true)}
-          />
         </div>
 
-        <p className="font-mono text-xs text-[var(--muted)] mt-4 text-center tracking-wide">
-          Having trouble viewing?{" "}
-          <a
-            href={cvUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flash-blue focus-brutal"
-          >
-            Open PDF directly ↗
-          </a>
-        </p>
+        {state === "ready" && (
+          <p className="font-mono text-xs text-[var(--muted)] mt-4 text-center tracking-wide">
+            Having trouble viewing?{" "}
+            <a
+              href={cvUrl}
+              download="AhmedWassim_CV.pdf"
+              className="flash-blue focus-brutal"
+            >
+              Download PDF directly ↓
+            </a>
+          </p>
+        )}
       </main>
       <Footer />
     </>
