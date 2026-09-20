@@ -1,7 +1,13 @@
-import { site } from "@/config/site"
 import { Reveal } from "@/components/ui/Reveal"
+import type { Experience } from "@/types/api"
 
-export function ExperienceSection() {
+interface ExperienceSectionProps {
+  experiences: Experience[]
+}
+
+export function ExperienceSection({ experiences }: ExperienceSectionProps) {
+  if (experiences.length === 0) return null
+
   return (
     <section className="border-b-2 border-[var(--ink)]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16">
@@ -9,19 +15,24 @@ export function ExperienceSection() {
           <h2 className="font-mono font-black text-2xl tracking-tight">/ EXPERIENCE</h2>
         </div>
         <div className="space-y-0">
-          {site.experience.map((row, i) => (
-            <Reveal key={i} delay={i * 80}>
+          {experiences.map((row, i) => (
+            <Reveal key={row.id} delay={i * 80}>
               <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1 border-b border-[var(--ghost)] py-5">
                 <span className="font-mono text-xs text-[var(--muted)] tracking-widest shrink-0 w-36">
                   {row.period}
                 </span>
                 <span className="font-mono font-black text-lg tracking-tight">
-                  {row.company}
+                  {row.company.toUpperCase()}
                 </span>
                 <span className="font-mono text-sm font-bold tracking-widest text-[var(--muted)]">
-                  {row.role}
+                  {row.role.toUpperCase()}
                 </span>
               </div>
+              {row.description && (
+                <p className="font-sans text-sm text-[var(--muted)] pb-3 pl-0 max-w-xl">
+                  {row.description}
+                </p>
+              )}
             </Reveal>
           ))}
         </div>

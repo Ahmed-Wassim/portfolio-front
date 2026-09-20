@@ -1,6 +1,10 @@
 import { site } from "@/config/site"
 
-export function Footer() {
+interface FooterProps {
+  socials?: { label: string; href: string }[]
+}
+
+export function Footer({ socials = [...site.socials] }: FooterProps) {
   return (
     <footer className="border-t-2 border-[var(--ink)] mt-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -8,7 +12,7 @@ export function Footer() {
           {site.footerCredit}
         </span>
         <div className="flex items-center gap-4">
-          {site.socials.map((s) => (
+          {socials.map((s) => (
             <a
               key={s.label}
               href={s.href}

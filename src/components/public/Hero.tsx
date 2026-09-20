@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { toast } from "sonner"
 import { site } from "@/config/site"
 import { StatusPill } from "@/components/public/StatusPill"
 
@@ -12,16 +11,6 @@ interface HeroProps {
 }
 
 export function Hero({ apiOnline, tagline, stack }: HeroProps) {
-  function handleCvClick(e: React.MouseEvent<HTMLAnchorElement>) {
-    e.preventDefault()
-    fetch(site.ctaSecondaryHref, { method: "HEAD" })
-      .then((res) => {
-        if (!res.ok) toast.error("CV file not found")
-        else window.open(site.ctaSecondaryHref, "_blank", "noopener")
-      })
-      .catch(() => toast.error("CV file not found"))
-  }
-
   return (
     <section className="relative overflow-hidden border-b-2 border-[var(--ink)] bg-dots">
       {/* Deco shapes — pointer-events:none, hidden below sm */}
@@ -64,7 +53,7 @@ export function Hero({ apiOnline, tagline, stack }: HeroProps) {
           </span>
         </h1>
 
-        {/* Yellow tagline slab — always #111111 text/border regardless of theme */}
+        {/* Yellow tagline slab */}
         <div
           className="border-2 border-[#111111] bg-[var(--main)] inline-block px-5 py-4 mb-10 max-w-2xl"
           style={{ boxShadow: "8px 8px 0 #111111" }}
@@ -77,18 +66,14 @@ export function Hero({ apiOnline, tagline, stack }: HeroProps) {
           </p>
         </div>
 
-        {/* CTAs */}
+        {/* CTAs — VIEW WORK scrolls to section, VIEW CV opens framed page */}
         <div className="flex flex-wrap gap-4">
           <Link href={site.ctaPrimaryHref} className="btn-brutal btn-brutal-ink focus-brutal">
             {site.ctaPrimary}
           </Link>
-          <a
-            href={site.ctaSecondaryHref}
-            onClick={handleCvClick}
-            className="btn-brutal btn-brutal-panel focus-brutal"
-          >
+          <Link href="/cv" className="btn-brutal btn-brutal-panel focus-brutal">
             {site.ctaSecondary}
-          </a>
+          </Link>
         </div>
       </div>
     </section>

@@ -1,7 +1,13 @@
-import { site } from "@/config/site"
 import { Reveal } from "@/components/ui/Reveal"
+import type { SkillCategory } from "@/types/api"
 
-export function SkillsSection() {
+interface SkillsSectionProps {
+  categories: SkillCategory[]
+}
+
+export function SkillsSection({ categories }: SkillsSectionProps) {
+  if (categories.length === 0) return null
+
   return (
     <section id="skills" className="section-anchor border-b-2 border-[var(--ink)]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16">
@@ -9,16 +15,16 @@ export function SkillsSection() {
           <h2 className="font-mono font-black text-2xl tracking-tight">/ SKILLS</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
-          {site.skills.map((group, i) => (
-            <Reveal key={group.category} delay={i * 60}>
+          {categories.map((group, i) => (
+            <Reveal key={group.id} delay={i * 60}>
               <div className="border-brutal bg-[var(--panel)] p-4 shadow-brutal">
                 <p className="font-mono text-xs font-bold tracking-widest text-[var(--muted)] mb-3">
-                  {group.category}
+                  {group.name.toUpperCase()}
                 </p>
                 <ul className="space-y-1">
-                  {group.items.map((item) => (
-                    <li key={item} className="font-mono text-sm font-bold">
-                      {item}
+                  {group.skills.map((skill) => (
+                    <li key={skill.id} className="font-mono text-sm font-bold">
+                      {skill.name}
                     </li>
                   ))}
                 </ul>
