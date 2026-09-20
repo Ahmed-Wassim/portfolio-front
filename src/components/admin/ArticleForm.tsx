@@ -1,6 +1,6 @@
 "use client"
 
-import { useId, useState } from "react"
+import { useId, useState, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation"
 import { useSWRConfig } from "swr"
 import { createArticle, updateArticle, uploadUrl } from "@/lib/api"
 import { PlaceholderBlock } from "@/components/public/PlaceholderBlock"
+import { useUnsavedWarning } from "@/hooks/useUnsavedWarning"
+import { useKeyboardSubmit } from "@/hooks/useKeyboardSubmit"
 import type { Article } from "@/types/api"
 
 const ARTICLES_KEY = "/api/admin/articles"
@@ -32,6 +34,7 @@ interface ArticleFormProps {
 export function ArticleForm({ article }: ArticleFormProps) {
   const router = useRouter()
   const { mutate } = useSWRConfig()
+  const formRef = useRef<HTMLFormElement>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(
     article?.image ? uploadUrl(article.image) : null
@@ -48,7 +51,7 @@ export function ArticleForm({ article }: ArticleFormProps) {
     register,
     handleSubmit,
     setValue,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -58,6 +61,9 @@ export function ArticleForm({ article }: ArticleFormProps) {
       published: article?.published ?? false,
     },
   })
+
+  useUnsavedWarning(isDirty && !isSubmitting)
+  useKeyboardSubmit(formRef)
 
   function autoSlug(title: string) {
     return title
@@ -106,7 +112,7 @@ export function ArticleForm({ article }: ArticleFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5 max-w-2xl">
+    <form ref={formRef} onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5 max-w-2xl">
       {/* Image */}
       <div>
         <p className="font-mono text-xs font-bold tracking-widest mb-1">IMAGE</p>

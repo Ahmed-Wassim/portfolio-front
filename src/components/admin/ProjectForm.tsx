@@ -1,6 +1,6 @@
 "use client"
 
-import { useId, useState } from "react"
+import { useId, useState, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation"
 import { useSWRConfig } from "swr"
 import { createProject, updateProject, uploadUrl, ADMIN_PROJECTS_KEY } from "@/lib/api"
 import { PlaceholderBlock } from "@/components/public/PlaceholderBlock"
+import { useUnsavedWarning } from "@/hooks/useUnsavedWarning"
+import { useKeyboardSubmit } from "@/hooks/useKeyboardSubmit"
 import type { Project } from "@/types/api"
 
 const schema = z.object({
@@ -28,6 +30,7 @@ interface ProjectFormProps {
 export function ProjectForm({ project }: ProjectFormProps) {
   const router = useRouter()
   const { mutate } = useSWRConfig()
+  const formRef = useRef<HTMLFormElement>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(
     project?.image ? uploadUrl(project.image) : null
@@ -43,7 +46,7 @@ export function ProjectForm({ project }: ProjectFormProps) {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -54,6 +57,9 @@ export function ProjectForm({ project }: ProjectFormProps) {
       featured: project?.featured ?? false,
     },
   })
+
+  useUnsavedWarning(isDirty && !isSubmitting)
+  useKeyboardSubmit(formRef)
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -84,7 +90,7 @@ export function ProjectForm({ project }: ProjectFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5 max-w-xl">
+    <form ref={formRef} onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5 max-w-xl">
       {/* Image preview */}
       <div>
         <p className="font-mono text-xs font-bold tracking-widest mb-1">IMAGE</p>
@@ -165,6 +171,7 @@ export function ProjectForm({ project }: ProjectFormProps) {
           type="submit"
           disabled={isSubmitting}
           className="btn-brutal btn-brutal-ink focus-brutal disabled:opacity-50"
+          title="Cmd/Ctrl + Enter"
         >
           {isSubmitting ? "SAVING…" : project ? "UPDATE" : "CREATE"}
         </button>

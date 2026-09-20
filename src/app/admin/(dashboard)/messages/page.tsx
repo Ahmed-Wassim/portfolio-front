@@ -7,7 +7,7 @@ import { ChevronDown, ChevronUp } from "lucide-react"
 import { swrFetcher, markMessageRead } from "@/lib/api"
 import { EmptyState } from "@/components/admin/EmptyState"
 import { ApiErrorBanner } from "@/components/admin/ApiErrorBanner"
-import { formatLogDate } from "@/lib/utils"
+import { formatLogDate, timeAgo } from "@/lib/utils"
 import type { Message } from "@/types/api"
 
 const MESSAGES_KEY = "/api/admin/messages"
@@ -96,8 +96,8 @@ export default function AdminMessagesPage() {
                       <span className="font-mono text-xs text-[var(--muted)] truncate">
                         {msg.email}
                       </span>
-                      <span className="font-mono text-xs text-[var(--muted)] shrink-0">
-                        [{formatLogDate(msg.created_at)}]
+                      <span className="font-mono text-xs text-[var(--muted)] shrink-0" title={formatLogDate(msg.created_at)}>
+                        {timeAgo(msg.created_at)}
                       </span>
                     </div>
                     <p className={`font-mono text-xs truncate mt-0.5 ${!msg.is_read ? "font-bold" : "text-[var(--muted)]"}`}>

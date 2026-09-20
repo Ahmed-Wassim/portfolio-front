@@ -1,13 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import useSWR from "swr"
 import { toast } from "sonner"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import { swrFetcher, deleteProject, ADMIN_PROJECTS_KEY } from "@/lib/api"
 import { EmptyState } from "@/components/admin/EmptyState"
 import { ApiErrorBanner } from "@/components/admin/ApiErrorBanner"
+import { useSearchFocus } from "@/hooks/useSearchFocus"
 import type { Project } from "@/types/api"
 
 export default function AdminProjectsPage() {
@@ -18,6 +19,8 @@ export default function AdminProjectsPage() {
   )
   const [search, setSearch] = useState("")
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+  useSearchFocus(searchRef)
 
   const filtered = (projects ?? []).filter((p) =>
     p.title.toLowerCase().includes(search.toLowerCase())
@@ -50,8 +53,9 @@ export default function AdminProjectsPage() {
       </div>
 
       <input
+        ref={searchRef}
         type="search"
-        placeholder="SEARCH…"
+        placeholder="SEARCH… (Ctrl+K)"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="border-brutal bg-[var(--panel)] px-3 py-2 font-mono text-sm focus-brutal outline-none w-full max-w-sm mb-6"
