@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import type { ReactNode } from "react"
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google"
 import { ThemeProvider } from "@/lib/theme"
+import { NavProgress } from "@/components/ui/NavProgress"
 import "./globals.css"
 
 const ibmPlexMono = IBM_Plex_Mono({
@@ -45,7 +46,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         >
           Skip to content
         </a>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <NavProgress />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )
