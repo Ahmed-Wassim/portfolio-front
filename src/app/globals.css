@@ -64,9 +64,19 @@ body {
   color: var(--ink);
   font-family: var(--font-sans, system-ui, sans-serif);
   min-height: 100dvh;
+  transition: background-color 150ms ease, color 150ms ease;
 }
 
 /* ── Brutal utilities ─────────────────────────────── */
+
+/* Smooth theme transitions on key surfaces */
+header, footer, aside, nav,
+.border-brutal,
+.btn-brutal,
+.bg-\[var\(--panel\)\],
+[class*="bg-[var(--"] {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+}
 
 .border-brutal {
   border: 2px solid var(--ink);
