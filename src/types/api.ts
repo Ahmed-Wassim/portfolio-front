@@ -58,6 +58,34 @@ export type ArticleInput = {
   image?: File | null
 }
 
+export type Profile = {
+  id: number
+  tagline: string
+  stack: string[]
+  created_at: string
+  updated_at: string
+}
+
+export type AboutItem = {
+  id: number
+  title: string
+  content: string
+  sort: number
+  created_at: string
+  updated_at: string
+}
+
+export type ProfileInput = {
+  tagline: string
+  stack: string[]
+}
+
+export type AboutInput = {
+  title?: string
+  content: string
+  sort?: number
+}
+
 export type ContactInput = {
   name: string
   email: string
