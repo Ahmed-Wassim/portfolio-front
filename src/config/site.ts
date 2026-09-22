@@ -34,10 +34,10 @@ export const site = {
 
   // ── Nav ───────────────────────────────────────────────
   nav: [
-    { label: "/ABOUT",  href: "#about"  },
+    { label: "/ABOUT", href: "#about" },
     { label: "/SKILLS", href: "#skills" },
-    { label: "/LOGS",   href: "#logs"   },
-    { label: "/WORK",   href: "#work"   },
+    { label: "/LOGS", href: "#logs" },
+    { label: "/WORK", href: "#work" },
   ] as const,
 
   hireMeLabel: "HIRE ME",
@@ -54,17 +54,25 @@ export const site = {
   ] as const,
 
   // ── Skills ────────────────────────────────────────────
-  // Fallback shown when the API is unavailable.
-  skills: [] as { category: string; items: string[] }[],
+  // Fallback shown when the API is unavailable or not yet seeded.
+  skills: [
+    { category: "LANGUAGES", items: ["Go", "PHP", "TypeScript", "SQL"] },
+    { category: "FRAMEWORKS", items: ["Gin", "Laravel", "Next.js"] },
+    { category: "DATA", items: ["PostgreSQL", "Redis", "GORM"] },
+    { category: "INFRA", items: ["Docker", "Linux", "Nginx"] },
+    { category: "TOOLS", items: ["Git", "REST APIs", "JWT"] },
+  ] as const,
 
   // ── Experience ────────────────────────────────────────
-  // Fallback shown when the API is unavailable.
-  experience: [] as { period: string; company: string; role: string }[],
+  // Fallback shown when the API is unavailable or not yet seeded.
+  experience: [
+    { period: "2025 — PRESENT", company: "TRAVWARE", role: "BACKEND DEVELOPER" },
+  ] as const,
 
   // ── Socials ───────────────────────────────────────────
   // Fallback shown when the API is unavailable.
   socials: [
-    { label: "GitHub",   href: "https://github.com/Ahmed-Wassim" },
+    { label: "GitHub", href: "https://github.com/Ahmed-Wassim" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/ahmed-wassim-27651b259" },
   ] as const,
 
@@ -73,7 +81,7 @@ export const site = {
   logsEmpty: "No logs yet — check back soon.",
 
   // ── Footer ────────────────────────────────────────────
-  footerCredit: "Built by AHMEDWASSIM — Next.js · Go · PostgreSQL",
+  footerCredit: "Built by AHMEDWASSIM",
 } as const
 
 export type SiteConfig = typeof site

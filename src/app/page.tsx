@@ -70,12 +70,42 @@ export default async function Home() {
 
   const apiOnline = !projectsOffline && !articlesOffline
 
-  // Fall back to site.ts when API unavailable
+  // Fall back to site.ts when API unavailable or not yet seeded
   const tagline = profileData?.tagline ?? site.tagline
   const stack = profileData?.stack.length ? profileData.stack : [...site.stack]
   const aboutParagraphs = aboutData?.length ? aboutData.map((a) => a.content) : [...site.about]
-  const skillCategoryList = skillsData ?? []
-  const experienceList = experiencesData ?? []
+
+  // Skills: use API data if seeded, otherwise convert site.ts fallback to SkillCategory shape
+  const skillCategoryList: SkillCategory[] = skillsData?.length
+    ? skillsData
+    : site.skills.map((g, i) => ({
+      id: -(i + 1), // negative IDs signal static fallback
+      name: g.category,
+      sort: i,
+      skills: g.items.map((name, j) => ({
+        id: -(i * 100 + j + 1),
+        name,
+        category_id: -(i + 1),
+        sort: j,
+        created_at: "",
+        updated_at: "",
+      })),
+      created_at: "",
+      updated_at: "",
+    }))
+
+  const experienceList: Experience[] = experiencesData?.length
+    ? experiencesData
+    : site.experience.map((e, i) => ({
+      id: -(i + 1),
+      company: e.company,
+      role: e.role,
+      period: e.period,
+      description: "",
+      sort_order: i,
+      created_at: "",
+      updated_at: "",
+    }))
   const socialLinks = socialsData?.length
     ? socialsData.map((s) => ({ label: s.platform, href: s.url }))
     : [...site.socials]
