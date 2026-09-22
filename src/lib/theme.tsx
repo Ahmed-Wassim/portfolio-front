@@ -39,21 +39,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const toggle = useCallback(() => {
-    setTheme((prev) => {
-      const next: Theme = prev === "light" ? "dark" : "light"
-      document.documentElement.setAttribute("data-theme", next)
-      try {
-        localStorage.setItem(STORAGE_KEY, next)
-      } catch {
-        // localStorage blocked — in-session only, still works
-      }
-      return next
-    })
+    setTheme((prev) => (prev === "light" ? "dark" : "light"))
   }, [])
 
-  // Keep data-theme attribute in sync if something external changes state.
+  // Single place that applies theme to DOM + storage.
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme)
+    try {
+      localStorage.setItem(STORAGE_KEY, theme)
+    } catch {
+      // localStorage blocked — in-session only, still works
+    }
   }, [theme])
 
   return (
