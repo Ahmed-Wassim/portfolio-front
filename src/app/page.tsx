@@ -19,54 +19,43 @@ import {
   listSocials,
 } from "@/lib/api"
 import { site } from "@/config/site"
-import type { Project, Article, Profile, AboutItem, SkillCategory, Experience, Social } from "@/types/api"
+import type { SkillCategory, Experience } from "@/types/api"
 
 export const dynamic = "force-dynamic"
 
-async function safeFetch<T>(fn: () => Promise<{ ok: boolean; data: T | null }>): Promise<T | null> {
-  try {
-    const res = await fn()
-    return res.ok ? res.data : null
-  } catch {
-    return null
-  }
-}
-
 export default async function Home() {
-  // All fetches independent — one failure never blanks the whole poster
+  // All fetches independent — one failure never blanks the whole poster.
+  // request() never throws (network errors become failed ApiResults),
+  // so Promise.all is safe here without allSettled.
   const [
-    projectsResult,
-    articlesResult,
-    profile,
-    aboutItems,
-    skillCategories,
-    experiences,
-    socials,
-  ] = await Promise.allSettled([
+    projectsRes,
+    articlesRes,
+    profileRes,
+    aboutRes,
+    skillsRes,
+    experiencesRes,
+    socialsRes,
+  ] = await Promise.all([
     listProjects(),
     listArticles(),
-    safeFetch(getProfile),
-    safeFetch(listAbout),
-    safeFetch(listSkills),
-    safeFetch(listExperiences),
-    safeFetch(listSocials),
+    getProfile(),
+    listAbout(),
+    listSkills(),
+    listExperiences(),
+    listSocials(),
   ])
 
-  const projects = projectsResult.status === "fulfilled" && projectsResult.value.ok
-    ? projectsResult.value.data as Project[]
-    : null
+  const projects = projectsRes.ok ? projectsRes.data : null
   const projectsOffline = projects === null
 
-  const articles = articlesResult.status === "fulfilled" && articlesResult.value.ok
-    ? articlesResult.value.data as Article[]
-    : null
+  const articles = articlesRes.ok ? articlesRes.data : null
   const articlesOffline = articles === null
 
-  const profileData = profile.status === "fulfilled" ? profile.value as Profile | null : null
-  const aboutData = aboutItems.status === "fulfilled" ? aboutItems.value as AboutItem[] | null : null
-  const skillsData = skillCategories.status === "fulfilled" ? skillCategories.value as SkillCategory[] | null : null
-  const experiencesData = experiences.status === "fulfilled" ? experiences.value as Experience[] | null : null
-  const socialsData = socials.status === "fulfilled" ? socials.value as Social[] | null : null
+  const profileData = profileRes.ok ? profileRes.data : null
+  const aboutData = aboutRes.ok ? aboutRes.data : null
+  const skillsData = skillsRes.ok ? skillsRes.data : null
+  const experiencesData = experiencesRes.ok ? experiencesRes.data : null
+  const socialsData = socialsRes.ok ? socialsRes.data : null
 
   const apiOnline = !projectsOffline && !articlesOffline
 
