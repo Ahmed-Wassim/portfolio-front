@@ -49,7 +49,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b-2 border-[var(--ink)] bg-[var(--panel)]">
-      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6">
+      <div className="mx-auto flex max-w-7xl items-center gap-2 sm:gap-4 px-4 py-3 sm:px-6">
 
         {/* Window-bar title + traffic-light dots */}
         <div className="flex items-center gap-3 min-w-0">
@@ -66,10 +66,10 @@ export function Header() {
           </Link>
         </div>
 
-        {/* Nav */}
+        {/* Nav — single scrollable row on mobile so the sticky header stays short */}
         <nav
           aria-label="Primary navigation"
-          className="ml-auto flex items-center gap-1 sm:gap-3 flex-wrap justify-end"
+          className="ml-auto flex items-center gap-1 sm:gap-3 flex-nowrap justify-end overflow-x-auto min-w-0"
         >
           {site.nav.map((item) => {
             const sectionId = item.href.replace("#", "")
@@ -95,7 +95,7 @@ export function Header() {
           <a
             href={site.hireMeHref}
             onClick={scrollToHire}
-            className="btn-brutal btn-brutal-main focus-brutal ml-1 text-xs px-3 py-1.5"
+            className="btn-brutal btn-brutal-main focus-brutal ml-1 text-xs px-3 py-1.5 shrink-0"
           >
             {site.hireMeLabel}
           </a>
@@ -104,7 +104,7 @@ export function Header() {
           <button
             onClick={toggle}
             aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
-            className="btn-brutal btn-brutal-panel focus-brutal p-1.5 ml-1"
+            className="btn-brutal btn-brutal-panel focus-brutal p-1.5 ml-1 shrink-0"
           >
             {theme === "light" ? (
               <Moon size={14} aria-hidden="true" />

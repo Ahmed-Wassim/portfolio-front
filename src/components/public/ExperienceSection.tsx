@@ -8,8 +8,8 @@ interface ExperienceSectionProps {
 export function ExperienceSection({ experiences }: ExperienceSectionProps) {
   return (
     <section className="border-b-2 border-[var(--ink)]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16">
-        <div className="border-b-2 border-[var(--ink)] pb-4 mb-10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16">
+        <div className="border-b-2 border-[var(--ink)] pb-4 mb-6 sm:mb-10">
           <h2 className="font-mono font-black text-2xl tracking-tight">/ EXPERIENCE</h2>
         </div>
 

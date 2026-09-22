@@ -14,7 +14,7 @@ export function Footer({ socials = [...site.socials] }: FooterProps) {
         <span className="font-mono text-xs text-[var(--muted)] tracking-wide">
           {site.footerCredit}
         </span>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-center sm:justify-end gap-4 flex-wrap">
           {socials.map((s) => {
             const Icon = getSocialIcon(s.label, s.iconKey)
             return (

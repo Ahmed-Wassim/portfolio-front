@@ -15,9 +15,9 @@ export function LogsSection({ articles, offline }: LogsSectionProps) {
 
   return (
     <section id="logs" className="section-anchor border-b-2 border-[var(--ink)]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16">
         {/* Section header */}
-        <div className="flex items-center justify-between mb-10 border-b-2 border-[var(--ink)] pb-4">
+        <div className="flex items-center justify-between mb-6 sm:mb-10 border-b-2 border-[var(--ink)] pb-4">
           <h2 className="font-mono font-black text-2xl tracking-tight">/ LOGS</h2>
           {offline && (
             <StatusPill status="offline" label={site.statusOffline} />
@@ -59,7 +59,7 @@ export function LogsSection({ articles, offline }: LogsSectionProps) {
                   <span className="font-mono text-xs text-[var(--muted)] shrink-0 tracking-widest">
                     [{formatLogDate(article.created_at)}]
                   </span>
-                  <span className="font-mono text-sm font-bold tracking-tight group-hover:text-[var(--secondary)] transition-colors line-clamp-1 flex-1">
+                  <span className="font-mono text-sm font-bold tracking-tight group-hover:text-[var(--secondary)] transition-colors line-clamp-1 flex-1 min-w-0">
                     {article.title}
                   </span>
                   <span className="font-mono text-xs text-[var(--muted)] shrink-0 hidden sm:block">

@@ -253,7 +253,7 @@ header, footer, aside, nav,
 .prose-brutal h2 { font-size: clamp(1.25rem, 3vw, 1.5rem); }
 .prose-brutal h3 { font-size: 1.125rem; }
 
-.prose-brutal p { margin: 0.75em 0; }
+.prose-brutal p { margin: 0.75em 0; overflow-wrap: break-word; }
 
 .prose-brutal a {
   color: var(--secondary);
@@ -267,7 +267,7 @@ header, footer, aside, nav,
   margin: 0.75em 0;
 }
 
-.prose-brutal li { margin: 0.25em 0; }
+.prose-brutal li { margin: 0.25em 0; overflow-wrap: break-word; }
 
 .prose-brutal blockquote {
   border-left: 4px solid var(--ink);
@@ -307,6 +307,8 @@ header, footer, aside, nav,
   border-collapse: collapse;
   width: 100%;
   margin: 1em 0;
+  display: block;
+  overflow-x: auto;
 }
 
 .prose-brutal th,
@@ -356,17 +358,6 @@ header, footer, aside, nav,
   70%  { width: 85%;  opacity: 1; }
   100% { width: 100%; opacity: 0; }
 }
-
-/* Stack header nav items on small screens is handled via flex-wrap in JSX.
-   320px title truncation is handled via `truncate` class in Header. */
-
-@media (max-width: 640px) {
-  .hide-sm {
-    display: none !important;
-  }
-}
-
-/* ── Responsive ───────────────────────────────────── */
 
 @media (max-width: 640px) {
   .hide-sm {
