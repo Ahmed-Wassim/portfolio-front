@@ -10,9 +10,19 @@ import { useSWRConfig } from "swr"
 import { createSocial, updateSocial, ADMIN_SOCIALS_KEY } from "@/lib/api"
 import type { Social } from "@/types/api"
 
+const urlOrEmail = z.string().min(1, "Required").refine((val) => {
+  const v = val.trim()
+  if (!v) return false
+  if (v.toLowerCase().startsWith("mailto:")) {
+    return z.string().email().safeParse(v.slice(7).split("?")[0]).success
+  }
+  if (z.string().url().safeParse(v).success) return true
+  return z.string().email().safeParse(v).success
+}, "Must be a valid URL or email")
+
 const schema = z.object({
   platform: z.string().min(1, "Required"),
-  url: z.string().url("Must be a valid URL"),
+  url: urlOrEmail,
   icon: z.string(),
   sort_order: z.number().int().min(0),
 })
@@ -46,7 +56,12 @@ export function SocialForm({ item, nextSort = 0 }: { item?: Social; nextSort?: n
   }, [nextSort, item, reset])
 
   async function onSubmit(values: FormValues) {
-    const input = { ...values, icon: values.icon || undefined }
+    const rawUrl = values.url.trim()
+    const url =
+      rawUrl.includes("@") && !rawUrl.includes("://") && !rawUrl.toLowerCase().startsWith("mailto:")
+        ? `mailto:${rawUrl}`
+        : rawUrl
+    const input = { ...values, url, icon: values.icon || undefined }
     const result = item
       ? await updateSocial(item.id, input)
       : await createSocial(input)
@@ -76,12 +91,13 @@ export function SocialForm({ item, nextSort = 0 }: { item?: Social; nextSort?: n
       </div>
 
       <div>
-        <label htmlFor={urlId} className="block font-mono text-xs font-bold tracking-widest mb-1">URL</label>
+        <label htmlFor={urlId} className="block font-mono text-xs font-bold tracking-widest mb-1">URL OR EMAIL</label>
         <input
           id={urlId}
-          type="url"
+          type="text"
+          inputMode="url"
           disabled={isSubmitting}
-          placeholder="https://github.com/..."
+          placeholder="https://github.com/... or you@mail.com"
           {...register("url")}
           className="w-full border-brutal bg-[var(--bg)] px-3 py-2 font-mono text-sm focus-brutal outline-none disabled:opacity-50"
           aria-invalid={!!errors.url}
