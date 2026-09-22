@@ -13,18 +13,18 @@ export default function EditSocialPage({ params }: { params: Promise<{ id: strin
   )
 
   if (isLoading) return (
-    <div className="p-8 space-y-4 max-w-xl">
+    <div className="p-4 sm:p-8 space-y-4 max-w-xl">
       {[0, 1, 2, 3].map((i) => <div key={i} className="h-10 border-brutal bg-[var(--panel)] animate-pulse" />)}
     </div>
   )
 
   if (error || !item) return (
-    <div className="p-8"><p className="font-mono text-sm text-[var(--danger)]">Social not found.</p></div>
+    <div className="p-4 sm:p-8"><p className="font-mono text-sm text-[var(--danger)]">Social not found.</p></div>
   )
 
   return (
-    <div className="p-8">
-      <div className="border-b-2 border-[var(--ink)] pb-4 mb-8">
+    <div className="p-4 sm:p-8">
+      <div className="border-b-2 border-[var(--ink)] pb-4 mb-6 sm:mb-8">
         <p className="font-mono text-xs text-[var(--muted)] tracking-widest mb-1">SOCIALS</p>
         <h1 className="font-mono font-black text-2xl tracking-tight">EDIT SOCIAL</h1>
       </div>

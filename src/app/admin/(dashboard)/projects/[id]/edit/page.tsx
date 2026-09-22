@@ -20,7 +20,7 @@ export default function EditProjectPage({ params }: Props) {
 
   if (isLoading) {
     return (
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <div className="h-6 w-32 bg-[var(--ghost)] animate-pulse mb-8" />
         <div className="space-y-4 max-w-xl">
           {[0, 1, 2].map((i) => (
@@ -33,15 +33,15 @@ export default function EditProjectPage({ params }: Props) {
 
   if (error || !project) {
     return (
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <p className="font-mono text-sm text-[var(--danger)]">Project not found.</p>
       </div>
     )
   }
 
   return (
-    <div className="p-8">
-      <div className="border-b-2 border-[var(--ink)] pb-4 mb-8">
+    <div className="p-4 sm:p-8">
+      <div className="border-b-2 border-[var(--ink)] pb-4 mb-6 sm:mb-8">
         <p className="font-mono text-xs text-[var(--muted)] tracking-widest mb-1">PROJECTS</p>
         <h1 className="font-mono font-black text-2xl tracking-tight">EDIT PROJECT</h1>
       </div>

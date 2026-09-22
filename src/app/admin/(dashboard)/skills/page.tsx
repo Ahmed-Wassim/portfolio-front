@@ -88,8 +88,8 @@ export default function AdminSkillsPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="border-b-2 border-[var(--ink)] pb-4 mb-8">
+    <div className="p-4 sm:p-8">
+      <div className="border-b-2 border-[var(--ink)] pb-4 mb-6 sm:mb-8">
         <p className="font-mono text-xs text-[var(--muted)] tracking-widest mb-1">ADMIN</p>
         <h1 className="font-mono font-black text-2xl tracking-tight">SKILLS</h1>
       </div>
@@ -169,7 +169,7 @@ export default function AdminSkillsPage() {
                 ) : (
                 <div className="flex items-center gap-3 px-4 py-3">
                   <span className="font-mono text-xs text-[var(--muted)] w-6 shrink-0">{cat.sort}</span>
-                  <span className="font-mono font-bold text-sm flex-1">{cat.name.toUpperCase()}</span>
+                  <span className="font-mono font-bold text-sm flex-1 min-w-0 truncate">{cat.name.toUpperCase()}</span>
                   <span className="font-mono text-xs text-[var(--muted)]">{catSkills.length} skills</span>
                   <button
                     onClick={() => setExpanded(isOpen ? null : cat.id)}

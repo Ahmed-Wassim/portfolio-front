@@ -33,10 +33,15 @@ export function Sidebar({ unreadCount }: SidebarProps) {
   }
 
   return (
-    <aside className="w-56 shrink-0 border-r-2 border-[var(--ink)] bg-[var(--panel)] flex flex-col min-h-dvh">
-      <div className="border-b-2 border-[var(--ink)] px-4 py-4">
-        <p className="font-mono text-xs text-[var(--muted)] tracking-widest">ADMIN</p>
-        <p className="font-mono font-black text-sm tracking-tight">AHMEDWASSIM.exe</p>
+    <aside className="w-14 sm:w-56 shrink-0 border-r-2 border-[var(--ink)] bg-[var(--panel)] flex flex-col min-h-dvh">
+      <div className="border-b-2 border-[var(--ink)] px-4 py-4 flex items-center justify-center sm:justify-start">
+        <div className="hidden sm:block">
+          <p className="font-mono text-xs text-[var(--muted)] tracking-widest">ADMIN</p>
+          <p className="font-mono font-black text-sm tracking-tight">AHMEDWASSIM.exe</p>
+        </div>
+        <p aria-hidden="true" className="sm:hidden font-mono font-black text-sm bg-[var(--main)] text-[#111111] border-brutal px-1.5 py-0.5">
+          A
+        </p>
       </div>
 
       <nav className="flex-1 py-4 overflow-y-auto" aria-label="Admin navigation">
@@ -46,17 +51,18 @@ export function Sidebar({ unreadCount }: SidebarProps) {
             <Link
               key={href}
               href={href}
+              title={label}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 font-mono text-xs font-bold tracking-widest transition-colors focus-brutal",
+                "flex items-center justify-center sm:justify-start gap-3 px-2 sm:px-4 py-3 font-mono text-xs font-bold tracking-widest transition-colors focus-brutal",
                 active
                   ? "bg-[var(--main)] text-[#111111] border-r-2 border-[var(--ink)]"
                   : "hover:bg-[var(--ghost)]"
               )}
             >
               <Icon size={14} aria-hidden="true" />
-              <span>{label}</span>
+              <span className="hidden sm:inline">{label}</span>
               {label === "MESSAGES" && unreadCount > 0 && (
-                <span className="ml-auto border-brutal px-1.5 py-0.5 text-xs font-black bg-[var(--danger)] text-white leading-none">
+                <span className="hidden sm:inline ml-auto border-brutal px-1.5 py-0.5 text-xs font-black bg-[var(--danger)] text-white leading-none">
                   {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
               )}
@@ -65,13 +71,14 @@ export function Sidebar({ unreadCount }: SidebarProps) {
         })}
       </nav>
 
-      <div className="border-t-2 border-[var(--ink)] p-4">
+      <div className="border-t-2 border-[var(--ink)] p-4 flex justify-center sm:justify-start">
         <button
           onClick={logout}
-          className="flex items-center gap-2 w-full font-mono text-xs font-bold tracking-widest text-[var(--danger)] hover:bg-[var(--ghost)] px-2 py-2 focus-brutal transition-colors"
+          title="Logout"
+          className="flex items-center gap-2 font-mono text-xs font-bold tracking-widest text-[var(--danger)] hover:bg-[var(--ghost)] px-2 py-2 focus-brutal transition-colors"
         >
           <LogOut size={14} aria-hidden="true" />
-          LOGOUT
+          <span className="hidden sm:inline">LOGOUT</span>
         </button>
       </div>
     </aside>

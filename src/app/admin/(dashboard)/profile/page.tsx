@@ -70,7 +70,7 @@ export default function AdminProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="p-8 space-y-4 max-w-xl">
+      <div className="p-4 sm:p-8 space-y-4 max-w-xl">
         <div className="h-6 w-32 bg-[var(--ghost)] animate-pulse" />
         {[0, 1, 2].map((i) => (
           <div key={i} className="h-10 border-brutal bg-[var(--panel)] animate-pulse" />
@@ -80,8 +80,8 @@ export default function AdminProfilePage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="border-b-2 border-[var(--ink)] pb-4 mb-8">
+    <div className="p-4 sm:p-8">
+      <div className="border-b-2 border-[var(--ink)] pb-4 mb-6 sm:mb-8">
         <p className="font-mono text-xs text-[var(--muted)] tracking-widest mb-1">ADMIN</p>
         <h1 className="font-mono font-black text-2xl tracking-tight">PROFILE</h1>
       </div>
