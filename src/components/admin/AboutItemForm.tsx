@@ -1,6 +1,6 @@
 "use client"
 
-import { useId } from "react"
+import { useId, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -20,9 +20,11 @@ type FormValues = z.infer<typeof schema>
 
 interface AboutItemFormProps {
   item?: AboutItem
+  /** Pre-computed next sort value for new items (max existing + 1) */
+  nextSort?: number
 }
 
-export function AboutItemForm({ item }: AboutItemFormProps) {
+export function AboutItemForm({ item, nextSort = 0 }: AboutItemFormProps) {
   const router = useRouter()
   const { mutate } = useSWRConfig()
 
@@ -33,15 +35,23 @@ export function AboutItemForm({ item }: AboutItemFormProps) {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       title: item?.title ?? "",
       content: item?.content ?? "",
-      sort: item?.sort ?? 0,
+      sort: item?.sort ?? nextSort,
     },
   })
+
+  // When nextSort resolves from SWR (async), update the sort field if this is a new item
+  useEffect(() => {
+    if (!item) {
+      reset((prev) => ({ ...prev, sort: nextSort }))
+    }
+  }, [nextSort, item, reset])
 
   async function onSubmit(values: FormValues) {
     const input = {
