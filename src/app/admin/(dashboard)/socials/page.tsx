@@ -8,6 +8,7 @@ import { Plus, Pencil, Trash2 } from "lucide-react"
 import { swrFetcher, deleteSocial, ADMIN_SOCIALS_KEY } from "@/lib/api"
 import { EmptyState } from "@/components/admin/EmptyState"
 import { ApiErrorBanner } from "@/components/admin/ApiErrorBanner"
+import { getSocialIcon } from "@/lib/social-icons"
 import type { Social } from "@/types/api"
 
 export default function AdminSocialsPage() {
@@ -51,12 +52,15 @@ export default function AdminSocialsPage() {
 
       {!isLoading && !error && items && items.length > 0 && (
         <div className="border-brutal overflow-hidden">
-          {items.map((item, i) => (
+          {items.map((item, i) => {
+            const Icon = getSocialIcon(item.platform, item.icon)
+            return (
             <div
               key={item.id}
               className={`flex items-center gap-4 px-4 py-3 ${i !== items.length - 1 ? "border-b-2 border-[var(--ink)]" : ""}`}
             >
               <span className="font-mono text-xs text-[var(--muted)] w-6 shrink-0">{item.sort_order}</span>
+              <Icon size={14} aria-hidden="true" className="shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="font-mono font-bold text-sm">{item.platform}</p>
                 <a
@@ -82,7 +86,8 @@ export default function AdminSocialsPage() {
                 </button>
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

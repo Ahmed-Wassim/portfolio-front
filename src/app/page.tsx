@@ -107,7 +107,7 @@ export default async function Home() {
       updated_at: "",
     }))
   const socialLinks = socialsData?.length
-    ? socialsData.map((s) => ({ label: s.platform, href: s.url }))
+    ? socialsData.map((s) => ({ label: s.platform, href: s.url, iconKey: s.icon || s.platform }))
     : [...site.socials]
 
   return (

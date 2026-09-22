@@ -1,7 +1,10 @@
 import { site } from "@/config/site"
+import { getSocialIcon } from "@/lib/social-icons"
+
+export type FooterSocial = { label: string; href: string; iconKey?: string }
 
 interface FooterProps {
-  socials?: { label: string; href: string }[]
+  socials?: FooterSocial[]
 }
 
 export function Footer({ socials = [...site.socials] }: FooterProps) {
@@ -12,17 +15,21 @@ export function Footer({ socials = [...site.socials] }: FooterProps) {
           {site.footerCredit}
         </span>
         <div className="flex items-center gap-4">
-          {socials.map((s) => (
-            <a
-              key={s.label}
-              href={s.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono text-xs font-bold tracking-widest flash-blue focus-brutal"
-            >
-              {s.label.toUpperCase()}
-            </a>
-          ))}
+          {socials.map((s) => {
+            const Icon = getSocialIcon(s.label, s.iconKey)
+            return (
+              <a
+                key={s.label}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-xs font-bold tracking-widest flash-blue focus-brutal inline-flex items-center gap-1.5"
+              >
+                <Icon size={12} aria-hidden="true" />
+                {s.label.toUpperCase()}
+              </a>
+            )
+          })}
         </div>
       </div>
     </footer>
