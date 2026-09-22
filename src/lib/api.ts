@@ -227,9 +227,6 @@ export async function getProject(id: number | string): Promise<ApiResult<Project
   return ok(normalizeProject(res.data.project), res.status)
 }
 
-export const listAdminProjects = listProjects
-export const getAdminProject = getProject
-
 export async function listArticles(): Promise<ApiResult<Article[]>> {
   const res = await request<{ articles?: unknown }>("/api/articles")
   if (!res.ok) return res
@@ -264,21 +261,6 @@ export async function login(email: string, password: string): Promise<ApiResult<
   if (!token) return fail("invalid request data", res.status)
   setToken(token)
   return ok(token, res.status)
-}
-
-export async function getDashboard(): Promise<ApiResult<Dashboard>> {
-  const res = await request<Record<string, unknown>>("/api/admin/dashboard", {
-    auth: true,
-  })
-  if (!res.ok) return res
-  return ok(
-    {
-      projects: asNumber(pick(res.data, "projects")),
-      articles: asNumber(pick(res.data, "articles")),
-      unread_messages: asNumber(pick(res.data, "unread_messages")),
-    },
-    res.status,
-  )
 }
 
 function projectFormData(input: ProjectInput) {
@@ -329,23 +311,6 @@ export async function deleteProject(id: number | string): Promise<ApiResult<unkn
   return request(`/api/admin/projects/${id}`, { method: "DELETE", auth: true })
 }
 
-export async function listArticlesAdmin(): Promise<ApiResult<Article[]>> {
-  const res = await request<{ articles?: unknown }>("/api/admin/articles", {
-    auth: true,
-  })
-  if (!res.ok) return res
-  const list = Array.isArray(res.data.articles) ? res.data.articles : []
-  return ok(list.map(normalizeArticle), res.status)
-}
-
-export async function getArticleAdmin(id: number | string): Promise<ApiResult<Article>> {
-  const res = await request<{ article?: unknown }>(`/api/admin/articles/${id}`, {
-    auth: true,
-  })
-  if (!res.ok) return res
-  return ok(normalizeArticle(res.data.article), res.status)
-}
-
 export async function createArticle(input: ArticleInput): Promise<ApiResult<Article>> {
   const res = await request<{ article?: unknown }>("/api/admin/articles", {
     method: "POST",
@@ -371,15 +336,6 @@ export async function updateArticle(
 
 export async function deleteArticle(id: number | string): Promise<ApiResult<unknown>> {
   return request(`/api/admin/articles/${id}`, { method: "DELETE", auth: true })
-}
-
-export async function listMessages(): Promise<ApiResult<Message[]>> {
-  const res = await request<{ messages?: unknown }>("/api/admin/messages", {
-    auth: true,
-  })
-  if (!res.ok) return res
-  const list = Array.isArray(res.data.messages) ? res.data.messages : []
-  return ok(list.map(normalizeMessage), res.status)
 }
 
 export async function markMessageRead(id: number | string): Promise<ApiResult<Message>> {
@@ -522,19 +478,6 @@ export async function listAbout(): Promise<ApiResult<AboutItem[]>> {
   return ok(list.map(normalizeAboutItem), res.status)
 }
 
-export async function listAboutAdmin(): Promise<ApiResult<AboutItem[]>> {
-  const res = await request<{ about?: unknown }>("/api/admin/about", { auth: true })
-  if (!res.ok) return res
-  const list = Array.isArray(res.data.about) ? res.data.about : []
-  return ok(list.map(normalizeAboutItem), res.status)
-}
-
-export async function getAboutItem(id: number | string): Promise<ApiResult<AboutItem>> {
-  const res = await request<{ about?: unknown }>(`/api/admin/about/${id}`, { auth: true })
-  if (!res.ok) return res
-  return ok(normalizeAboutItem(res.data.about), res.status)
-}
-
 export async function createAboutItem(input: AboutInput): Promise<ApiResult<AboutItem>> {
   const res = await request<{ about?: unknown }>("/api/admin/about", {
     method: "POST",
@@ -602,13 +545,6 @@ export async function listSkills(): Promise<ApiResult<SkillCategory[]>> {
 export const ADMIN_SKILL_CATEGORIES_KEY = "/api/admin/skill-categories"
 export const ADMIN_SKILLS_KEY = "/api/admin/skills"
 
-export async function listSkillCategoriesAdmin(): Promise<ApiResult<SkillCategory[]>> {
-  const res = await request<{ skill_categories?: unknown }>("/api/admin/skill-categories", { auth: true })
-  if (!res.ok) return res
-  const list = Array.isArray(res.data.skill_categories) ? res.data.skill_categories : []
-  return ok(list.map(normalizeSkillCategory), res.status)
-}
-
 export async function createSkillCategory(input: SkillCategoryInput): Promise<ApiResult<SkillCategory>> {
   const res = await request<{ skill_category?: unknown }>("/api/admin/skill-categories", {
     method: "POST", auth: true, json: input,
@@ -627,13 +563,6 @@ export async function updateSkillCategory(id: number | string, input: SkillCateg
 
 export async function deleteSkillCategory(id: number | string): Promise<ApiResult<unknown>> {
   return request(`/api/admin/skill-categories/${id}`, { method: "DELETE", auth: true })
-}
-
-export async function listSkillsAdmin(): Promise<ApiResult<Skill[]>> {
-  const res = await request<{ skills?: unknown }>("/api/admin/skills", { auth: true })
-  if (!res.ok) return res
-  const list = Array.isArray(res.data.skills) ? res.data.skills : []
-  return ok(list.map(normalizeSkill), res.status)
 }
 
 export async function createSkill(input: SkillInput): Promise<ApiResult<Skill>> {
@@ -681,12 +610,6 @@ export async function listExperiences(): Promise<ApiResult<Experience[]>> {
   return ok(list.map(normalizeExperience), res.status)
 }
 
-export async function getExperienceAdmin(id: number | string): Promise<ApiResult<Experience>> {
-  const res = await request<{ experience?: unknown }>(`/api/admin/experiences/${id}`, { auth: true })
-  if (!res.ok) return res
-  return ok(normalizeExperience(res.data.experience), res.status)
-}
-
 export async function createExperience(input: ExperienceInput): Promise<ApiResult<Experience>> {
   const res = await request<{ experience?: unknown }>("/api/admin/experiences", {
     method: "POST", auth: true, json: input,
@@ -729,12 +652,6 @@ export async function listSocials(): Promise<ApiResult<Social[]>> {
   if (!res.ok) return res
   const list = Array.isArray(res.data.socials) ? res.data.socials : []
   return ok(list.map(normalizeSocial), res.status)
-}
-
-export async function getSocialAdmin(id: number | string): Promise<ApiResult<Social>> {
-  const res = await request<{ social?: unknown }>(`/api/admin/socials/${id}`, { auth: true })
-  if (!res.ok) return res
-  return ok(normalizeSocial(res.data.social), res.status)
 }
 
 export async function createSocial(input: SocialInput): Promise<ApiResult<Social>> {
