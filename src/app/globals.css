@@ -351,16 +351,3 @@ header, footer, aside, nav,
     opacity: 0.6 !important;
   }
 }
-
-/* Admin content area navigation strip */
-@keyframes nav-strip {
-  0%   { width: 0%;   opacity: 1; }
-  70%  { width: 85%;  opacity: 1; }
-  100% { width: 100%; opacity: 0; }
-}
-
-@media (max-width: 640px) {
-  .hide-sm {
-    display: none !important;
-  }
-}
