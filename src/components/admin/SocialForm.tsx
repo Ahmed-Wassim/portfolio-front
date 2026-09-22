@@ -1,6 +1,6 @@
 "use client"
 
-import { useId } from "react"
+import { useEffect, useId } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -19,7 +19,7 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-export function SocialForm({ item }: { item?: Social }) {
+export function SocialForm({ item, nextSort = 0 }: { item?: Social; nextSort?: number }) {
   const router = useRouter()
   const { mutate } = useSWRConfig()
 
@@ -28,15 +28,22 @@ export function SocialForm({ item }: { item?: Social }) {
   const iconId = useId()
   const sortId = useId()
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       platform: item?.platform ?? "",
       url: item?.url ?? "",
       icon: item?.icon ?? "",
-      sort_order: item?.sort_order ?? 0,
+      sort_order: item?.sort_order ?? nextSort,
     },
   })
+
+  // When nextSort resolves from SWR (async), update the sort field if this is a new item
+  useEffect(() => {
+    if (!item) {
+      reset((prev) => ({ ...prev, sort_order: nextSort }))
+    }
+  }, [nextSort, item, reset])
 
   async function onSubmit(values: FormValues) {
     const input = { ...values, icon: values.icon || undefined }
