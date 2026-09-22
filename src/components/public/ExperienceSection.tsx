@@ -33,7 +33,7 @@ export function ExperienceSection({ experiences }: ExperienceSectionProps) {
                   </span>
                 </div>
                 {row.description && (
-                  <p className="font-sans text-sm text-[var(--muted)] pb-3 pl-0 max-w-xl">
+                  <p className="font-sans text-sm text-[var(--muted)] pt-3 pb-5 max-w-xl">
                     {row.description}
                   </p>
                 )}
