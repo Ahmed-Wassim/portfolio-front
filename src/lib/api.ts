@@ -3,7 +3,6 @@ import type {
   Article,
   ArticleInput,
   ContactInput,
-  Dashboard,
   Message,
   Project,
   ProjectInput,
