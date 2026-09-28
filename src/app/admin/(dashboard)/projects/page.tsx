@@ -90,6 +90,18 @@ export default function AdminProjectsPage() {
                   {project.featured ? "FEATURED · " : ""}
                   {new Date(project.created_at).toLocaleDateString()}
                 </p>
+                {project.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {project.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="border border-[var(--ink)] bg-[var(--panel)] px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Link

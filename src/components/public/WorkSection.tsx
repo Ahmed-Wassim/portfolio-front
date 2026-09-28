@@ -1,7 +1,11 @@
+"use client"
+
+import { useState } from "react"
 import Link from "next/link"
 import { site } from "@/config/site"
 import { PlaceholderBlock } from "@/components/public/PlaceholderBlock"
 import { StatusPill } from "@/components/public/StatusPill"
+import { TagFilter, TagList, collectTags } from "@/components/public/Tags"
 import { Reveal } from "@/components/ui/Reveal"
 import { uploadUrl } from "@/lib/api"
 import type { Project } from "@/types/api"
@@ -50,7 +54,11 @@ function ProjectImage({
 }
 
 export function WorkSection({ projects, offline }: WorkSectionProps) {
+  const [tag, setTag] = useState<string | null>(null)
+
   const sorted = projects ? sortProjects(projects) : []
+  const allTags = collectTags(sorted)
+  const visible = tag ? sorted.filter((p) => p.tags.includes(tag)) : sorted
   const isEmpty = sorted.length === 0
 
   return (
@@ -85,32 +93,45 @@ export function WorkSection({ projects, offline }: WorkSectionProps) {
             </div>
           </>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sorted.map((project, i) => (
-              <Reveal key={project.id} delay={i * 80}>
-                <Link
-                  href={`/projects/${project.id}`}
-                  className="block border-brutal shadow-brutal bg-[var(--panel)] hover:shadow-brutal-lg transition-shadow focus-brutal group"
-                >
-                  <ProjectImage image={project.image} title={project.title} />
-                  <div className="p-4">
-                    <p className="font-mono text-xs text-[var(--muted)] tracking-widest mb-1">
-                      {String(i + 1).padStart(2, "0")} /
-                      {project.featured && (
-                        <span className="ml-2 text-[var(--small)]">FEATURED</span>
-                      )}
-                    </p>
-                    <h3 className="font-mono font-bold text-sm tracking-tight line-clamp-2 group-hover:text-[var(--secondary)] transition-colors">
-                      {project.title.toUpperCase()}
-                    </h3>
-                    <p className="font-sans text-xs text-[var(--muted)] mt-1 line-clamp-2">
-                      {project.description}
-                    </p>
-                  </div>
-                </Link>
-              </Reveal>
-            ))}
-          </div>
+          <>
+            <TagFilter tags={allTags} active={tag} onChange={setTag} />
+
+            {visible.length === 0 ? (
+              <p className="font-mono text-xs text-[var(--muted)] tracking-widest">
+                No projects tagged “{tag}”.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {visible.map((project, i) => (
+                  <Reveal key={project.id} delay={i * 80}>
+                    <Link
+                      href={`/projects/${project.id}`}
+                      className="block border-brutal shadow-brutal bg-[var(--panel)] hover:shadow-brutal-lg transition-shadow focus-brutal group"
+                    >
+                      <ProjectImage image={project.image} title={project.title} />
+                      <div className="p-4">
+                        <p className="font-mono text-xs text-[var(--muted)] tracking-widest mb-1">
+                          {String(i + 1).padStart(2, "0")} /
+                          {project.featured && (
+                            <span className="ml-2 text-[var(--small)]">FEATURED</span>
+                          )}
+                        </p>
+                        <h3 className="font-mono font-bold text-sm tracking-tight line-clamp-2 group-hover:text-[var(--secondary)] transition-colors">
+                          {project.title.toUpperCase()}
+                        </h3>
+                        <p className="font-sans text-xs text-[var(--muted)] mt-1 line-clamp-2">
+                          {project.description}
+                        </p>
+                        {project.tags.length > 0 && (
+                          <TagList tags={project.tags} className="mt-3" />
+                        )}
+                      </div>
+                    </Link>
+                  </Reveal>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>

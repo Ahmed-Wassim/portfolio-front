@@ -98,6 +98,18 @@ export default function AdminArticlesPage() {
                     · {article.slug}
                   </span>
                 </div>
+                {article.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {article.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="border border-[var(--ink)] bg-[var(--panel)] px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Link

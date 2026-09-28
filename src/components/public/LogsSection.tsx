@@ -19,9 +19,19 @@ export function LogsSection({ articles, offline }: LogsSectionProps) {
         {/* Section header */}
         <div className="flex items-center justify-between mb-6 sm:mb-10 border-b-2 border-[var(--ink)] pb-4">
           <h2 className="font-mono font-black text-2xl tracking-tight">/ LOGS</h2>
-          {offline && (
-            <StatusPill status="offline" label={site.statusOffline} />
-          )}
+          <div className="flex items-center gap-4">
+            {!isEmpty && (
+              <Link
+                href="/articles"
+                className="font-mono text-xs font-bold tracking-widest flash-blue focus-brutal"
+              >
+                ALL LOGS →
+              </Link>
+            )}
+            {offline && (
+              <StatusPill status="offline" label={site.statusOffline} />
+            )}
+          </div>
         </div>
 
         {isEmpty ? (
