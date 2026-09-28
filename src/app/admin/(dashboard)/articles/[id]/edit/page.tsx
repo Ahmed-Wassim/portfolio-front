@@ -2,8 +2,11 @@
 
 import { use } from "react"
 import useSWR from "swr"
-import { swrFetcher } from "@/lib/api"
+
 import { ArticleForm } from "@/components/admin/ArticleForm"
+import { PageHeader } from "@/components/admin/PageHeader"
+import { FormSkeleton } from "@/components/admin/FormSkeleton"
+import { adminArticleKey, swrFetcher } from "@/lib/api"
 import type { Article } from "@/types/api"
 
 interface Props {
@@ -13,23 +16,12 @@ interface Props {
 export default function EditArticlePage({ params }: Props) {
   const { id } = use(params)
   const { data: article, isLoading, error } = useSWR<Article>(
-    `/api/admin/articles/${id}`,
+    adminArticleKey(id),
     swrFetcher,
-    { shouldRetryOnError: false }
+    { shouldRetryOnError: false },
   )
 
-  if (isLoading) {
-    return (
-      <div className="p-4 sm:p-8">
-        <div className="h-6 w-32 bg-[var(--ghost)] animate-pulse mb-8" />
-        <div className="space-y-4 max-w-xl">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="h-10 border-brutal bg-[var(--panel)] animate-pulse" />
-          ))}
-        </div>
-      </div>
-    )
-  }
+  if (isLoading) return <FormSkeleton />
 
   if (error || !article) {
     return (
@@ -41,10 +33,7 @@ export default function EditArticlePage({ params }: Props) {
 
   return (
     <div className="p-4 sm:p-8">
-      <div className="border-b-2 border-[var(--ink)] pb-4 mb-6 sm:mb-8">
-        <p className="font-mono text-xs text-[var(--muted)] tracking-widest mb-1">ARTICLES</p>
-        <h1 className="font-mono font-black text-2xl tracking-tight">EDIT ARTICLE</h1>
-      </div>
+      <PageHeader kicker="ARTICLES" title="EDIT ARTICLE" />
       <ArticleForm article={article} />
     </div>
   )

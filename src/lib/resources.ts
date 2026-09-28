@@ -8,7 +8,7 @@
  */
 
 import { asNumber, asRecord, pick } from "@/lib/coerce"
-import { request, unwrapList, unwrapOne } from "@/lib/http"
+import { ok, request, unwrapList, unwrapOne } from "@/lib/http"
 import {
   normalizeAboutItem,
   normalizeArticle,
@@ -24,18 +24,27 @@ import {
 } from "@/lib/normalize"
 import { ApiError } from "@/types/api"
 import type {
+  AboutInput,
   AboutItem,
   Article,
+  ArticleInput,
   CV,
   Experience,
+  ExperienceInput,
   Message,
   Profile,
+  ProfileInput,
   Project,
+  ProjectInput,
   Skill,
   SkillCategory,
+  SkillCategoryInput,
+  SkillInput,
   Social,
+  SocialInput,
   Tag,
 } from "@/types/api"
+import type { ApiResult } from "@/types/api"
 
 /** A flat, unnormalized collection (dashboard counts, skills-by-category). */
 type BareResource<T> = {
@@ -259,8 +268,7 @@ export async function mutateResource<T>(
   path: string,
   descriptor: BareResource<T>,
   options: Mutation,
-  envelope: "item" | "list" = "item",
-) {
+): Promise<ApiResult<T>> {
   const res = await request<unknown>(path, {
     method: options.method,
     auth: true,
@@ -268,59 +276,55 @@ export async function mutateResource<T>(
     json: options.json,
   })
   if (!res.ok) return res
-  const data =
-    envelope === "list"
-      ? unwrapList(res.data, descriptor.list).map(descriptor.normalize)
-      : descriptor.normalize(unwrapOne(res.data, descriptor.item))
-  return { ...res, data }
+  return ok(descriptor.normalize(unwrapOne(res.data, descriptor.item)), res.status)
 }
 
-export const createProject = (input: unknown) =>
+export const createProject = (input: ProjectInput) =>
   mutateResource(ADMIN_PROJECTS_KEY, READS.projects, {
     method: "POST",
-    body: projectFormData(input as never),
+    body: projectFormData(input),
   })
 
-export const updateProject = (id: number | string, input: unknown) =>
+export const updateProject = (id: number | string, input: ProjectInput) =>
   mutateResource(adminProjectKey(id), READS.projects, {
     method: "PUT",
-    body: projectFormData(input as never),
+    body: projectFormData(input),
   })
 
 export const deleteProject = (id: number | string) =>
   request<unknown>(adminProjectKey(id), { method: "DELETE", auth: true })
 
-export const createArticle = (input: unknown) =>
+export const createArticle = (input: ArticleInput) =>
   mutateResource(ADMIN_ARTICLES_KEY, READS.articles, {
     method: "POST",
-    body: articleFormData(input as never),
+    body: articleFormData(input),
   })
 
-export const updateArticle = (id: number | string, input: unknown) =>
+export const updateArticle = (id: number | string, input: ArticleInput) =>
   mutateResource(adminArticleKey(id), READS.articles, {
     method: "PUT",
-    body: articleFormData(input as never),
+    body: articleFormData(input),
   })
 
 export const deleteArticle = (id: number | string) =>
   request<unknown>(adminArticleKey(id), { method: "DELETE", auth: true })
 
-export const createAboutItem = (input: unknown) =>
+export const createAboutItem = (input: AboutInput) =>
   mutateResource(ADMIN_ABOUT_KEY, READS.about, { method: "POST", json: input })
 
-export const updateAboutItem = (id: number | string, input: unknown) =>
+export const updateAboutItem = (id: number | string, input: AboutInput) =>
   mutateResource(adminAboutKey(id), READS.about, { method: "PUT", json: input })
 
 export const deleteAboutItem = (id: number | string) =>
   request<unknown>(adminAboutKey(id), { method: "DELETE", auth: true })
 
-export const createExperience = (input: unknown) =>
+export const createExperience = (input: ExperienceInput) =>
   mutateResource(ADMIN_EXPERIENCES_KEY, READS.experiences, {
     method: "POST",
     json: input,
   })
 
-export const updateExperience = (id: number | string, input: unknown) =>
+export const updateExperience = (id: number | string, input: ExperienceInput) =>
   mutateResource(adminExperienceKey(id), READS.experiences, {
     method: "PUT",
     json: input,
@@ -329,22 +333,25 @@ export const updateExperience = (id: number | string, input: unknown) =>
 export const deleteExperience = (id: number | string) =>
   request<unknown>(adminExperienceKey(id), { method: "DELETE", auth: true })
 
-export const createSocial = (input: unknown) =>
+export const createSocial = (input: SocialInput) =>
   mutateResource(ADMIN_SOCIALS_KEY, READS.socials, { method: "POST", json: input })
 
-export const updateSocial = (id: number | string, input: unknown) =>
+export const updateSocial = (id: number | string, input: SocialInput) =>
   mutateResource(adminSocialKey(id), READS.socials, { method: "PUT", json: input })
 
 export const deleteSocial = (id: number | string) =>
   request<unknown>(adminSocialKey(id), { method: "DELETE", auth: true })
 
-export const createSkillCategory = (input: unknown) =>
+export const createSkillCategory = (input: SkillCategoryInput) =>
   mutateResource(ADMIN_SKILL_CATEGORIES_KEY, READS.skillCategories, {
     method: "POST",
     json: input,
   })
 
-export const updateSkillCategory = (id: number | string, input: unknown) =>
+export const updateSkillCategory = (
+  id: number | string,
+  input: SkillCategoryInput,
+) =>
   mutateResource(`${ADMIN_SKILL_CATEGORIES_KEY}/${id}`, READS.skillCategories, {
     method: "PUT",
     json: input,
@@ -356,10 +363,10 @@ export const deleteSkillCategory = (id: number | string) =>
     auth: true,
   })
 
-export const createSkill = (input: unknown) =>
+export const createSkill = (input: SkillInput) =>
   mutateResource(ADMIN_SKILLS_KEY, READS.skills, { method: "POST", json: input })
 
-export const updateSkill = (id: number | string, input: unknown) =>
+export const updateSkill = (id: number | string, input: SkillInput) =>
   mutateResource(`${ADMIN_SKILLS_KEY}/${id}`, READS.skills, {
     method: "PUT",
     json: input,
@@ -371,7 +378,7 @@ export const deleteSkill = (id: number | string) =>
 export const markMessageRead = (id: number | string) =>
   mutateResource(`${ADMIN_MESSAGES_KEY}/${id}`, READS.messages, { method: "PATCH" })
 
-export const updateProfile = (input: unknown) =>
+export const updateProfile = (input: ProfileInput) =>
   mutateResource(ADMIN_PROFILE_KEY, READS.profile, { method: "PUT", json: input })
 
 // ── Tags ──────────────────────────────────────────────────────────────────────

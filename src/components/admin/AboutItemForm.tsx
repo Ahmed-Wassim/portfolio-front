@@ -1,13 +1,17 @@
 "use client"
 
-import { useId, useEffect } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
+import useSWR from "swr"
 import { z } from "zod"
-import { toast } from "sonner"
-import { useRouter } from "next/navigation"
-import { useSWRConfig } from "swr"
-import { createAboutItem, updateAboutItem, ADMIN_ABOUT_KEY } from "@/lib/api"
+
+import { FormShell } from "@/components/admin/FormShell"
+import { TextAreaField, TextField, NumberField } from "@/components/ui/Field"
+import { useCrudForm, useNextSort, useNextSortValue } from "@/hooks/useCrudForm"
+import {
+  ADMIN_ABOUT_KEY,
+  createAboutItem,
+  swrFetcher,
+  updateAboutItem,
+} from "@/lib/api"
 import type { AboutItem } from "@/types/api"
 
 const schema = z.object({
@@ -20,137 +24,64 @@ type FormValues = z.infer<typeof schema>
 
 interface AboutItemFormProps {
   item?: AboutItem
-  /** Pre-computed next sort value for new items (max existing + 1) */
-  nextSort?: number
 }
 
-export function AboutItemForm({ item, nextSort = 0 }: AboutItemFormProps) {
-  const router = useRouter()
-  const { mutate } = useSWRConfig()
+export function AboutItemForm({ item }: AboutItemFormProps) {
+  // Only needed when creating: new items append to the end of the list.
+  const { data: items } = useSWR<AboutItem[]>(ADMIN_ABOUT_KEY, swrFetcher, {
+    shouldRetryOnError: false,
+  })
+  const nextSort = useNextSortValue(items, "sort")
 
-  const titleId = useId()
-  const contentId = useId()
-  const sortId = useId()
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const { form, submit } = useCrudForm<FormValues, FormValues, AboutItem>({
+    schema,
     defaultValues: {
       title: item?.title ?? "",
       content: item?.content ?? "",
       sort: item?.sort ?? nextSort,
     },
+    editingId: item?.id,
+    create: createAboutItem,
+    update: (_id, input) => updateAboutItem(item!.id, input),
+    listKeys: [ADMIN_ABOUT_KEY],
+    redirectTo: "/admin/about",
+    labels: { create: "About item created.", update: "About item updated." },
   })
 
-  // When nextSort resolves from SWR (async), update the sort field if this is a new item
-  useEffect(() => {
-    if (!item) {
-      reset((prev) => ({ ...prev, sort: nextSort }))
-    }
-  }, [nextSort, item, reset])
+  const { register, formState, reset } = form
 
-  async function onSubmit(values: FormValues) {
-    const input = {
-      title: values.title || undefined,
-      content: values.content,
-      sort: values.sort,
-    }
+  useNextSort(reset as never, "sort", nextSort, !item)
 
-    const result = item
-      ? await updateAboutItem(item.id, input)
-      : await createAboutItem(input)
-
-    if (result.ok) {
-      toast.success(item ? "About item updated." : "About item created.")
-      await mutate(ADMIN_ABOUT_KEY)
-      router.push("/admin/about")
-    } else {
-      toast.error(result.error || "Failed to save.")
-    }
-  }
+  const { errors, isSubmitting } = formState
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5 max-w-xl">
-      {/* Title (optional) */}
-      <div>
-        <label
-          htmlFor={titleId}
-          className="block font-mono text-xs font-bold tracking-widest mb-1"
-        >
-          TITLE <span className="text-[var(--muted)] font-normal">(optional)</span>
-        </label>
-        <input
-          id={titleId}
-          disabled={isSubmitting}
-          {...register("title")}
-          placeholder="e.g. Background"
-          className="w-full border-brutal bg-[var(--bg)] px-3 py-2 font-mono text-sm focus-brutal outline-none disabled:opacity-50"
-        />
-      </div>
+    <FormShell onSubmit={submit} isSubmitting={isSubmitting} submitLabel={item ? "UPDATE" : "CREATE"}>
+      <TextField
+        label="TITLE"
+        hint="(optional)"
+        disabled={isSubmitting}
+        error={errors.title?.message}
+        placeholder="e.g. Background"
+        {...register("title")}
+      />
 
-      {/* Content */}
-      <div>
-        <label
-          htmlFor={contentId}
-          className="block font-mono text-xs font-bold tracking-widest mb-1"
-        >
-          CONTENT
-        </label>
-        <textarea
-          id={contentId}
-          rows={5}
-          disabled={isSubmitting}
-          {...register("content")}
-          placeholder="Write a paragraph about yourself…"
-          className="w-full border-brutal bg-[var(--bg)] px-3 py-2 font-mono text-sm focus-brutal outline-none resize-y disabled:opacity-50"
-          aria-invalid={!!errors.content}
-        />
-        {errors.content && (
-          <p className="font-mono text-xs text-[var(--danger)] mt-1">{errors.content.message}</p>
-        )}
-      </div>
+      <TextAreaField
+        label="CONTENT"
+        rows={5}
+        disabled={isSubmitting}
+        error={errors.content?.message}
+        placeholder="Write a paragraph about yourself…"
+        aria-invalid={!!errors.content}
+        {...register("content")}
+      />
 
-      {/* Sort order */}
-      <div>
-        <label
-          htmlFor={sortId}
-          className="block font-mono text-xs font-bold tracking-widest mb-1"
-        >
-          SORT ORDER
-        </label>
-        <input
-          id={sortId}
-          type="number"
-          min={0}
-          disabled={isSubmitting}
-          {...register("sort", { valueAsNumber: true })}
-          className="w-24 border-brutal bg-[var(--bg)] px-3 py-2 font-mono text-sm focus-brutal outline-none disabled:opacity-50"
-        />
-        <p className="font-mono text-xs text-[var(--muted)] mt-1">
-          Lower numbers appear first (0, 1, 2…)
-        </p>
-      </div>
-
-      <div className="flex gap-3 pt-2">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="btn-brutal btn-brutal-ink focus-brutal disabled:opacity-50"
-        >
-          {isSubmitting ? "SAVING…" : item ? "UPDATE" : "CREATE"}
-        </button>
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="btn-brutal btn-brutal-panel focus-brutal"
-        >
-          CANCEL
-        </button>
-      </div>
-    </form>
+      <NumberField
+        label="SORT ORDER"
+        disabled={isSubmitting}
+        hint="(lower first)"
+        error={errors.sort?.message}
+        {...register("sort", { valueAsNumber: true })}
+      />
+    </FormShell>
   )
 }

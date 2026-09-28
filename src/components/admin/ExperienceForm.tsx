@@ -1,14 +1,18 @@
 "use client"
 
-import { useEffect, useId } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
+import useSWR from "swr"
 import { z } from "zod"
-import { toast } from "sonner"
-import { useRouter } from "next/navigation"
-import { useSWRConfig } from "swr"
-import { createExperience, updateExperience, ADMIN_EXPERIENCES_KEY } from "@/lib/api"
-import type { Experience } from "@/types/api"
+
+import { FormShell } from "@/components/admin/FormShell"
+import { NumberField, TextAreaField, TextField } from "@/components/ui/Field"
+import { useCrudForm, useNextSort, useNextSortValue } from "@/hooks/useCrudForm"
+import {
+  ADMIN_EXPERIENCES_KEY,
+  createExperience,
+  swrFetcher,
+  updateExperience,
+} from "@/lib/api"
+import type { Experience, ExperienceInput } from "@/types/api"
 
 const schema = z.object({
   company: z.string().min(1, "Required"),
@@ -20,18 +24,14 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-export function ExperienceForm({ item, nextSort = 0 }: { item?: Experience; nextSort?: number }) {
-  const router = useRouter()
-  const { mutate } = useSWRConfig()
+export function ExperienceForm({ item }: { item?: Experience }) {
+  const { data: items } = useSWR<Experience[]>(ADMIN_EXPERIENCES_KEY, swrFetcher, {
+    shouldRetryOnError: false,
+  })
+  const nextSort = useNextSortValue(items, "sort_order")
 
-  const companyId = useId()
-  const roleId = useId()
-  const periodId = useId()
-  const descId = useId()
-  const sortId = useId()
-
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const { form, submit } = useCrudForm<FormValues, ExperienceInput, Experience>({
+    schema,
     defaultValues: {
       company: item?.company ?? "",
       role: item?.role ?? "",
@@ -39,84 +39,64 @@ export function ExperienceForm({ item, nextSort = 0 }: { item?: Experience; next
       description: item?.description ?? "",
       sort_order: item?.sort_order ?? nextSort,
     },
+    editingId: item?.id,
+    create: createExperience,
+    update: (_id, input) => updateExperience(item!.id, input),
+    toInput: (values) => ({
+      ...values,
+      description: values.description || undefined,
+    }),
+    listKeys: [ADMIN_EXPERIENCES_KEY],
+    redirectTo: "/admin/experiences",
+    labels: { create: "Experience created.", update: "Experience updated." },
   })
 
-  // When nextSort resolves from SWR (async), update the sort field if this is a new item
-  useEffect(() => {
-    if (!item) {
-      reset((prev) => ({ ...prev, sort_order: nextSort }))
-    }
-  }, [nextSort, item, reset])
+  const { register, formState, reset } = form
 
-  async function onSubmit(values: FormValues) {
-    const input = { ...values, description: values.description || undefined }
-    const result = item
-      ? await updateExperience(item.id, input)
-      : await createExperience(input)
+  useNextSort(reset as never, "sort_order", nextSort, !item)
 
-    if (result.ok) {
-      toast.success(item ? "Experience updated." : "Experience created.")
-      await mutate(ADMIN_EXPERIENCES_KEY)
-      router.push("/admin/experiences")
-    } else {
-      toast.error(result.error || "Failed to save.")
-    }
-  }
+  const { errors, isSubmitting } = formState
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5 max-w-xl">
-      {[
-        { id: companyId, label: "COMPANY", key: "company" as const },
-        { id: roleId, label: "ROLE", key: "role" as const },
-        { id: periodId, label: "PERIOD", key: "period" as const, placeholder: "e.g. 2025 — PRESENT" },
-      ].map(({ id, label, key, placeholder }) => (
-        <div key={key}>
-          <label htmlFor={id} className="block font-mono text-xs font-bold tracking-widest mb-1">{label}</label>
-          <input
-            id={id}
-            disabled={isSubmitting}
-            placeholder={placeholder}
-            {...register(key)}
-            className="w-full border-brutal bg-[var(--bg)] px-3 py-2 font-mono text-sm focus-brutal outline-none disabled:opacity-50"
-            aria-invalid={!!errors[key]}
-          />
-          {errors[key] && <p className="font-mono text-xs text-[var(--danger)] mt-1">{errors[key]?.message}</p>}
-        </div>
-      ))}
+    <FormShell onSubmit={submit} isSubmitting={isSubmitting} submitLabel={item ? "UPDATE" : "CREATE"}>
+      <TextField
+        label="COMPANY"
+        disabled={isSubmitting}
+        error={errors.company?.message}
+        aria-invalid={!!errors.company}
+        {...register("company")}
+      />
 
-      <div>
-        <label htmlFor={descId} className="block font-mono text-xs font-bold tracking-widest mb-1">
-          DESCRIPTION <span className="text-[var(--muted)] font-normal">(optional)</span>
-        </label>
-        <textarea
-          id={descId}
-          rows={3}
-          disabled={isSubmitting}
-          {...register("description")}
-          className="w-full border-brutal bg-[var(--bg)] px-3 py-2 font-mono text-sm focus-brutal outline-none resize-y disabled:opacity-50"
-        />
-      </div>
+      <TextField
+        label="ROLE"
+        disabled={isSubmitting}
+        error={errors.role?.message}
+        aria-invalid={!!errors.role}
+        {...register("role")}
+      />
 
-      <div>
-        <label htmlFor={sortId} className="block font-mono text-xs font-bold tracking-widest mb-1">SORT ORDER</label>
-        <input
-          id={sortId}
-          type="number"
-          min={0}
-          disabled={isSubmitting}
-          {...register("sort_order", { valueAsNumber: true })}
-          className="w-24 border-brutal bg-[var(--bg)] px-3 py-2 font-mono text-sm focus-brutal outline-none disabled:opacity-50"
-        />
-      </div>
+      <TextField
+        label="PERIOD"
+        placeholder="e.g. 2025 — PRESENT"
+        disabled={isSubmitting}
+        error={errors.period?.message}
+        aria-invalid={!!errors.period}
+        {...register("period")}
+      />
 
-      <div className="flex gap-3 pt-2">
-        <button type="submit" disabled={isSubmitting} className="btn-brutal btn-brutal-ink focus-brutal disabled:opacity-50">
-          {isSubmitting ? "SAVING…" : item ? "UPDATE" : "CREATE"}
-        </button>
-        <button type="button" onClick={() => router.back()} className="btn-brutal btn-brutal-panel focus-brutal">
-          CANCEL
-        </button>
-      </div>
-    </form>
+      <TextAreaField
+        label="DESCRIPTION"
+        hint="(optional)"
+        rows={3}
+        disabled={isSubmitting}
+        {...register("description")}
+      />
+
+      <NumberField
+        label="SORT ORDER"
+        disabled={isSubmitting}
+        {...register("sort_order", { valueAsNumber: true })}
+      />
+    </FormShell>
   )
 }

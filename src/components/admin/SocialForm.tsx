@@ -1,14 +1,18 @@
 "use client"
 
-import { useEffect, useId } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
+import useSWR from "swr"
 import { z } from "zod"
-import { toast } from "sonner"
-import { useRouter } from "next/navigation"
-import { useSWRConfig } from "swr"
-import { createSocial, updateSocial, ADMIN_SOCIALS_KEY } from "@/lib/api"
-import type { Social } from "@/types/api"
+
+import { FormShell } from "@/components/admin/FormShell"
+import { NumberField, TextField } from "@/components/ui/Field"
+import { useCrudForm, useNextSort, useNextSortValue } from "@/hooks/useCrudForm"
+import {
+  ADMIN_SOCIALS_KEY,
+  createSocial,
+  swrFetcher,
+  updateSocial,
+} from "@/lib/api"
+import type { Social, SocialInput } from "@/types/api"
 
 const schema = z.object({
   platform: z.string().min(1, "Required"),
@@ -20,117 +24,82 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-export function SocialForm({ item, nextSort = 0 }: { item?: Social; nextSort?: number }) {
-  const router = useRouter()
-  const { mutate } = useSWRConfig()
+/** Normalizes a bare email or number into a working href. */
+function toHref(raw: string): string {
+  const value = raw.trim()
+  if (z.string().email().safeParse(value).success) return `mailto:${value}`
+  if (/^[+\d][\d\s\-().]{4,}$/.test(value)) {
+    return `tel:${value.replace(/[\s\-.()]/g, "")}`
+  }
+  return value
+}
 
-  const platformId = useId()
-  const urlId = useId()
-  const iconId = useId()
-  const sortId = useId()
+export function SocialForm({ item }: { item?: Social }) {
+  const { data: items } = useSWR<Social[]>(ADMIN_SOCIALS_KEY, swrFetcher, {
+    shouldRetryOnError: false,
+  })
+  const nextSort = useNextSortValue(items, "sort_order")
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const { form, submit } = useCrudForm<FormValues, SocialInput, Social>({
+    schema,
     defaultValues: {
       platform: item?.platform ?? "",
       url: item?.url ?? "",
       icon: item?.icon ?? "",
       sort_order: item?.sort_order ?? nextSort,
     },
+    editingId: item?.id,
+    create: createSocial,
+    update: (_id, input) => updateSocial(item!.id, input),
+    toInput: (values) => ({
+      ...values,
+      url: toHref(values.url),
+      icon: values.icon || undefined,
+    }),
+    listKeys: [ADMIN_SOCIALS_KEY],
+    redirectTo: "/admin/socials",
+    labels: { create: "Social created.", update: "Social updated." },
   })
 
-  // When nextSort resolves from SWR (async), update the sort field if this is a new item
-  useEffect(() => {
-    if (!item) {
-      reset((prev) => ({ ...prev, sort_order: nextSort }))
-    }
-  }, [nextSort, item, reset])
+  const { register, formState, reset } = form
 
-  async function onSubmit(values: FormValues) {
-    const rawUrl = values.url.trim()
-    // Normalize to a working href: bare email → mailto:, bare number → tel:, else as-is
-    let url = rawUrl
-    if (z.string().email().safeParse(rawUrl).success) {
-      url = `mailto:${rawUrl}`
-    } else if (/^[+\d][\d\s\-().]{4,}$/.test(rawUrl)) {
-      url = `tel:${rawUrl.replace(/[\s\-.()]/g, "")}`
-    }
-    const input = { ...values, url, icon: values.icon || undefined }
-    const result = item
-      ? await updateSocial(item.id, input)
-      : await createSocial(input)
+  useNextSort(reset as never, "sort_order", nextSort, !item)
 
-    if (result.ok) {
-      toast.success(item ? "Social updated." : "Social created.")
-      await mutate(ADMIN_SOCIALS_KEY)
-      router.push("/admin/socials")
-    } else {
-      toast.error(result.error || "Failed to save.")
-    }
-  }
+  const { errors, isSubmitting } = formState
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5 max-w-xl">
-      <div>
-        <label htmlFor={platformId} className="block font-mono text-xs font-bold tracking-widest mb-1">PLATFORM</label>
-        <input
-          id={platformId}
-          disabled={isSubmitting}
-          placeholder="e.g. GitHub"
-          {...register("platform")}
-          className="w-full border-brutal bg-[var(--bg)] px-3 py-2 font-mono text-sm focus-brutal outline-none disabled:opacity-50"
-          aria-invalid={!!errors.platform}
-        />
-        {errors.platform && <p className="font-mono text-xs text-[var(--danger)] mt-1">{errors.platform.message}</p>}
-      </div>
+    <FormShell onSubmit={submit} isSubmitting={isSubmitting} submitLabel={item ? "UPDATE" : "CREATE"}>
+      <TextField
+        label="PLATFORM"
+        placeholder="e.g. GitHub"
+        disabled={isSubmitting}
+        error={errors.platform?.message}
+        aria-invalid={!!errors.platform}
+        {...register("platform")}
+      />
 
-      <div>
-        <label htmlFor={urlId} className="block font-mono text-xs font-bold tracking-widest mb-1">LINK / NUMBER</label>
-        <input
-          id={urlId}
-          type="text"
-          inputMode="url"
-          disabled={isSubmitting}
-          placeholder="https://... or +20..."
-          {...register("url")}
-          className="w-full border-brutal bg-[var(--bg)] px-3 py-2 font-mono text-sm focus-brutal outline-none disabled:opacity-50"
-          aria-invalid={!!errors.url}
-        />
-        {errors.url && <p className="font-mono text-xs text-[var(--danger)] mt-1">{errors.url.message}</p>}
-      </div>
+      <TextField
+        label="LINK / NUMBER"
+        inputMode="url"
+        placeholder="https://... or +20..."
+        disabled={isSubmitting}
+        error={errors.url?.message}
+        aria-invalid={!!errors.url}
+        {...register("url")}
+      />
 
-      <div>
-        <label htmlFor={iconId} className="block font-mono text-xs font-bold tracking-widest mb-1">
-          ICON <span className="text-[var(--muted)] font-normal">(optional, e.g. github)</span>
-        </label>
-        <input
-          id={iconId}
-          disabled={isSubmitting}
-          {...register("icon")}
-          className="w-full border-brutal bg-[var(--bg)] px-3 py-2 font-mono text-sm focus-brutal outline-none disabled:opacity-50"
-        />
-      </div>
+      <TextField
+        label="ICON"
+        hint="(optional, e.g. github)"
+        disabled={isSubmitting}
+        {...register("icon")}
+      />
 
-      <div>
-        <label htmlFor={sortId} className="block font-mono text-xs font-bold tracking-widest mb-1">SORT ORDER</label>
-        <input
-          id={sortId}
-          type="number"
-          min={0}
-          disabled={isSubmitting}
-          {...register("sort_order", { valueAsNumber: true })}
-          className="w-24 border-brutal bg-[var(--bg)] px-3 py-2 font-mono text-sm focus-brutal outline-none disabled:opacity-50"
-        />
-      </div>
-
-      <div className="flex gap-3 pt-2">
-        <button type="submit" disabled={isSubmitting} className="btn-brutal btn-brutal-ink focus-brutal disabled:opacity-50">
-          {isSubmitting ? "SAVING…" : item ? "UPDATE" : "CREATE"}
-        </button>
-        <button type="button" onClick={() => router.back()} className="btn-brutal btn-brutal-panel focus-brutal">
-          CANCEL
-        </button>
-      </div>
-    </form>
+      <NumberField
+        label="SORT ORDER"
+        disabled={isSubmitting}
+        {...register("sort_order", { valueAsNumber: true })}
+      />
+    </FormShell>
   )
 }

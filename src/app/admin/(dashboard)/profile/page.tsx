@@ -1,13 +1,17 @@
 "use client"
 
-import { useId, useState, useEffect } from "react"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { toast } from "sonner"
 import { X, Plus } from "lucide-react"
 import useSWR, { useSWRConfig } from "swr"
-import { swrFetcher, updateProfile, ADMIN_PROFILE_KEY } from "@/lib/api"
+
+import { PageHeader } from "@/components/admin/PageHeader"
+import { FormSkeleton } from "@/components/admin/FormSkeleton"
+import { TextField } from "@/components/ui/Field"
+import { ADMIN_PROFILE_KEY, swrFetcher, updateProfile } from "@/lib/api"
 import type { Profile } from "@/types/api"
 
 const schema = z.object({
@@ -20,28 +24,28 @@ export default function AdminProfilePage() {
   const { data: profile, isLoading } = useSWR<Profile>(
     ADMIN_PROFILE_KEY,
     swrFetcher,
-    { shouldRetryOnError: false }
+    { shouldRetryOnError: false },
   )
   const { mutate } = useSWRConfig()
 
-  const taglineId = useId()
-  const [stack, setStack] = useState<string[]>([])
+  // Seeded once from the fetched profile, then owned by this form. Syncing it
+  // in an effect would wipe the user's edits on every background revalidate.
+  const [stack, setStack] = useState<string[]>(profile?.stack ?? [])
   const [stackInput, setStackInput] = useState("")
+  const [seededFor, setSeededFor] = useState<number | null>(null)
+  if (profile && seededFor === null) {
+    setSeededFor(profile.id)
+    setStack(profile.stack)
+  }
 
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) })
-
-  // Populate form when data loads
-  useEffect(() => {
-    if (profile) {
-      reset({ tagline: profile.tagline })
-      setStack(profile.stack)
-    }
-  }, [profile, reset])
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { tagline: profile?.tagline ?? "" },
+  })
 
   function addStackItem() {
     const val = stackInput.trim()
@@ -68,43 +72,19 @@ export default function AdminProfilePage() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="p-4 sm:p-8 space-y-4 max-w-xl">
-        <div className="h-6 w-32 bg-[var(--ghost)] animate-pulse" />
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="h-10 border-brutal bg-[var(--panel)] animate-pulse" />
-        ))}
-      </div>
-    )
-  }
+  if (isLoading) return <FormSkeleton />
 
   return (
     <div className="p-4 sm:p-8">
-      <div className="border-b-2 border-[var(--ink)] pb-4 mb-6 sm:mb-8">
-        <p className="font-mono text-xs text-[var(--muted)] tracking-widest mb-1">ADMIN</p>
-        <h1 className="font-mono font-black text-2xl tracking-tight">PROFILE</h1>
-      </div>
+      <PageHeader kicker="ADMIN" title="PROFILE" />
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6 max-w-xl">
-        {/* Tagline */}
-        <div>
-          <label
-            htmlFor={taglineId}
-            className="block font-mono text-xs font-bold tracking-widest mb-1"
-          >
-            TAGLINE
-          </label>
-          <input
-            id={taglineId}
-            disabled={isSubmitting}
-            {...register("tagline")}
-            className="w-full border-brutal bg-[var(--bg)] px-3 py-2 font-mono text-sm focus-brutal outline-none disabled:opacity-50"
-          />
-          {errors.tagline && (
-            <p className="font-mono text-xs text-[var(--danger)] mt-1">{errors.tagline.message}</p>
-          )}
-        </div>
+        <TextField
+          label="TAGLINE"
+          disabled={isSubmitting}
+          error={errors.tagline?.message}
+          {...register("tagline")}
+        />
 
         {/* Stack */}
         <div>

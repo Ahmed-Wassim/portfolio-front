@@ -2,8 +2,11 @@
 
 import { use } from "react"
 import useSWR from "swr"
-import { swrFetcher } from "@/lib/api"
+
 import { AboutItemForm } from "@/components/admin/AboutItemForm"
+import { PageHeader } from "@/components/admin/PageHeader"
+import { FormSkeleton } from "@/components/admin/FormSkeleton"
+import { adminAboutKey, swrFetcher } from "@/lib/api"
 import type { AboutItem } from "@/types/api"
 
 interface Props {
@@ -13,21 +16,12 @@ interface Props {
 export default function EditAboutItemPage({ params }: Props) {
   const { id } = use(params)
   const { data: item, isLoading, error } = useSWR<AboutItem>(
-    `/api/admin/about/${id}`,
+    adminAboutKey(id),
     swrFetcher,
-    { shouldRetryOnError: false }
+    { shouldRetryOnError: false },
   )
 
-  if (isLoading) {
-    return (
-      <div className="p-4 sm:p-8 space-y-4 max-w-xl">
-        <div className="h-6 w-32 bg-[var(--ghost)] animate-pulse" />
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="h-10 border-brutal bg-[var(--panel)] animate-pulse" />
-        ))}
-      </div>
-    )
-  }
+  if (isLoading) return <FormSkeleton />
 
   if (error || !item) {
     return (
@@ -39,10 +33,7 @@ export default function EditAboutItemPage({ params }: Props) {
 
   return (
     <div className="p-4 sm:p-8">
-      <div className="border-b-2 border-[var(--ink)] pb-4 mb-6 sm:mb-8">
-        <p className="font-mono text-xs text-[var(--muted)] tracking-widest mb-1">ABOUT</p>
-        <h1 className="font-mono font-black text-2xl tracking-tight">EDIT PARAGRAPH</h1>
-      </div>
+      <PageHeader kicker="ABOUT" title="EDIT PARAGRAPH" />
       <AboutItemForm item={item} />
     </div>
   )

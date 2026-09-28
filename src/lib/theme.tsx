@@ -31,12 +31,11 @@ function resolveInitialTheme(): Theme {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light")
-  // Hydrate from DOM on mount (avoids SSR mismatch — server renders "light",
-  // no-FOUC script may have already flipped to dark before hydration).
-  useEffect(() => {
-    setTheme(resolveInitialTheme())
-  }, [])
+  // Seeded during the first render, not in an effect. The server always
+  // renders "light" while the no-FOUC script may have already flipped <html>
+  // to dark, so the first client render must read the DOM to avoid a mismatch;
+  // after that the state is authoritative and the toggle drives it.
+  const [theme, setTheme] = useState<Theme>(resolveInitialTheme)
 
   const toggle = useCallback(() => {
     setTheme((prev) => (prev === "light" ? "dark" : "light"))

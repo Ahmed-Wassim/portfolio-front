@@ -2,8 +2,11 @@
 
 import { use } from "react"
 import useSWR from "swr"
-import { swrFetcher, adminProjectKey } from "@/lib/api"
+
 import { ProjectForm } from "@/components/admin/ProjectForm"
+import { PageHeader } from "@/components/admin/PageHeader"
+import { FormSkeleton } from "@/components/admin/FormSkeleton"
+import { adminProjectKey, swrFetcher } from "@/lib/api"
 import type { Project } from "@/types/api"
 
 interface Props {
@@ -15,21 +18,10 @@ export default function EditProjectPage({ params }: Props) {
   const { data: project, isLoading, error } = useSWR<Project>(
     adminProjectKey(id),
     swrFetcher,
-    { shouldRetryOnError: false }
+    { shouldRetryOnError: false },
   )
 
-  if (isLoading) {
-    return (
-      <div className="p-4 sm:p-8">
-        <div className="h-6 w-32 bg-[var(--ghost)] animate-pulse mb-8" />
-        <div className="space-y-4 max-w-xl">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="h-10 border-brutal bg-[var(--panel)] animate-pulse" />
-          ))}
-        </div>
-      </div>
-    )
-  }
+  if (isLoading) return <FormSkeleton />
 
   if (error || !project) {
     return (
@@ -41,10 +33,7 @@ export default function EditProjectPage({ params }: Props) {
 
   return (
     <div className="p-4 sm:p-8">
-      <div className="border-b-2 border-[var(--ink)] pb-4 mb-6 sm:mb-8">
-        <p className="font-mono text-xs text-[var(--muted)] tracking-widest mb-1">PROJECTS</p>
-        <h1 className="font-mono font-black text-2xl tracking-tight">EDIT PROJECT</h1>
-      </div>
+      <PageHeader kicker="PROJECTS" title="EDIT PROJECT" />
       <ProjectForm project={project} />
     </div>
   )
