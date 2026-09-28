@@ -359,6 +359,26 @@ header, footer, aside, nav,
   }
 }
 
+/* ── Hidden scrollbars ────────────────────────────
+   For containers that are intentionally swipe-scrollable but should never draw
+   a scrollbar track.
+
+   Note that `overflow-x: auto` forces `overflow-y` to compute to `auto` too,
+   so such a container can grow scrollbars on BOTH axes. The header nav is the
+   case that bit: its content sits flush against the right edge, so in a browser
+   that draws classic scrollbars (Brave disables Chromium's overlay scrollbars
+   on Windows) a vertical track appeared beside the theme toggle and a
+   horizontal one under the row. Chrome hides these behind overlay scrollbars,
+   which is why it only reproduced outside Chrome. */
+.scrollbar-none {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* legacy Edge */
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none; /* Chromium / Brave */
+}
+
 /* ── Form controls ────────────────────────────────
    The shared input/label/error class strings previously appeared ~30 times
    across the admin forms and the public contact form. */

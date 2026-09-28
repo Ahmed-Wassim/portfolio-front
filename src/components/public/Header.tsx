@@ -77,10 +77,14 @@ export function Header() {
           </Link>
         </div>
 
-        {/* Nav — single scrollable row on mobile so the sticky header stays short */}
+        {/* Nav — single scrollable row on mobile so the sticky header stays
+            short. The scrollbar is hidden because overflow-x: auto also makes
+            overflow-y scrollable, and this row sits flush against its right
+            edge — a browser drawing classic scrollbars would otherwise show a
+            track beside the theme toggle. */}
         <nav
           aria-label="Primary navigation"
-          className="ml-auto flex items-center gap-1 sm:gap-3 flex-nowrap justify-end overflow-x-auto min-w-0"
+          className="scrollbar-none ml-auto flex items-center gap-1 sm:gap-3 flex-nowrap justify-end overflow-x-auto min-w-0"
         >
           {site.nav.map((item) => {
             const sectionId = item.href.replace("#", "")
