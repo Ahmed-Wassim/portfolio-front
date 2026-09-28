@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, FolderKanban, FileText, Inbox, LogOut, User, BookOpen, Wrench, Briefcase, Share2, FileDown } from "lucide-react"
+import { LayoutDashboard, FolderKanban, FileText, Inbox, LogOut, User, BookOpen, Wrench, Briefcase, Share2, FileDown, Tags } from "lucide-react"
 import { clearToken } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
@@ -12,15 +12,16 @@ interface SidebarProps {
 
 const nav = [
   { label: "DASHBOARD",  href: "/admin",             icon: LayoutDashboard, exact: true  },
+  { label: "PROJECTS",   href: "/admin/projects",     icon: FolderKanban,    exact: false },
+  { label: "ARTICLES",   href: "/admin/articles",     icon: FileText,        exact: false },
+  { label: "MESSAGES",   href: "/admin/messages",     icon: Inbox,           exact: false },
+  { label: "TAGS",       href: "/admin/tags",         icon: Tags,            exact: false },
   { label: "PROFILE",    href: "/admin/profile",      icon: User,            exact: false },
   { label: "ABOUT",      href: "/admin/about",        icon: BookOpen,        exact: false },
   { label: "SKILLS",     href: "/admin/skills",       icon: Wrench,          exact: false },
   { label: "EXPERIENCE", href: "/admin/experiences",  icon: Briefcase,       exact: false },
   { label: "SOCIALS",    href: "/admin/socials",      icon: Share2,          exact: false },
   { label: "CV",         href: "/admin/cv",           icon: FileDown,        exact: false },
-  { label: "PROJECTS",   href: "/admin/projects",     icon: FolderKanban,    exact: false },
-  { label: "ARTICLES",   href: "/admin/articles",     icon: FileText,        exact: false },
-  { label: "MESSAGES",   href: "/admin/messages",     icon: Inbox,           exact: false },
 ] as const
 
 export function Sidebar({ unreadCount }: SidebarProps) {
