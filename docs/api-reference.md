@@ -40,6 +40,10 @@ ADMIN (protected — Bearer token required)
   DELETE /api/admin/articles/:id
   GET    /api/admin/messages
   PATCH  /api/admin/messages/:id
+  GET    /api/admin/tags
+  PATCH  /api/admin/tags/:id
+  DELETE /api/admin/tags/:id
+  POST   /api/admin/uploads/images
 
 UPLOADS
   GET    /uploads/:filename
@@ -291,6 +295,7 @@ Returns article by numeric ID (not slug).
 | `title` | string | ✓ | |
 | `slug` | string | ✓ | unique; `409` if taken |
 | `content` | string | | markdown body |
+| `tags` | string[] | | repeat the field once per tag. lowercased, de-duplicated, max 8 × 24 chars |
 | `published` | string | | `"true"` or `"false"` |
 | `image` | file | | jpg, jpeg, png, webp, gif |
 
@@ -323,6 +328,96 @@ Same multipart fields as POST. `published` is **required** on PUT. Omit `image` 
 ```json
 { "message": "article deleted" }
 ```
+
+---
+
+### `POST /api/admin/uploads/images`
+Uploads one or more images and returns their public paths, for embedding in
+article markdown. The `image` field on `POST/PUT /api/admin/articles` only covers
+the single cover image — this endpoint is how images *inside* the body get into
+`/uploads`.
+
+**Content-Type:** `multipart/form-data`
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `images` | file[] | ✓ | repeat the field once per file. jpg, jpeg, png, webp, gif. max 5 MB each |
+
+**Response 201**
+```json
+{ "images": ["/uploads/6f1a2b3c.png", "/uploads/9d8e7f6a.jpg"] }
+```
+
+Paths are **relative by design** so stored markdown does not depend on the API
+host. The renderer (`src/lib/markdown.tsx`) resolves them against `apiBase()`.
+
+****Errors:** `400` if no files were sent, if a file has a disallowed extension,
+or if a file exceeds 5 MB.
+
+---
+
+### `GET /api/admin/tags`
+
+Every tag in use, with usage counts. Soft-deleted articles and projects are
+excluded, so a tag only reads as in use while content actually references it.
+
+**Response 200**
+```json
+{ "tags": [ { "ID": 3, "name": "go", "article_count": 2, "project_count": 1 } ] }
+```
+
+Tags are returned on articles and projects as objects (`{ "ID": 3, "name": "go" }`);
+the frontend normalisers flatten them to plain names for display.
+
+---
+
+### `PATCH /api/admin/tags/:id`
+
+Renames a tag everywhere. **Content-Type:** `multipart/form-data`.
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `name` | string | ✓ | trimmed and lowercased; `409 tag already exists` if taken |
+
+**Response 200** → `{ "tag": { ... } }`
+
+---
+
+### `DELETE /api/admin/tags/:id`
+
+Unlinks the tag from every article and project, then hard-deletes it. Hard delete
+is deliberate: the unique name has to be freed so it can be reused.
+
+**Response 204**
+
+---
+
+### `GET /api/admin/cv`
+
+Returns metadata for the most recently uploaded CV, used by the dashboard panel
+and the admin CV page. `404` when nothing has been uploaded.
+
+**Response 200**
+```json
+{
+  "cv": {
+    "ID": 3,
+    "CreatedAt": "2026-09-21T00:34:49Z",
+    "UpdatedAt": "2026-09-22T21:23:47Z",
+    "DeletedAt": null,
+    "file_name": "68b2d5a4-c663-4ae7-bfc5-d78bbf879857.pdf"
+  }
+}
+```
+
+Timestamps come back capitalised because `gorm.Model` carries no JSON tags; the
+frontend normaliser reads both spellings.
+
+The **PDF itself** is not served from here. `GET /api/cv` forces
+`Content-Disposition: attachment`, so it always downloads. For a preview, point
+an iframe at the public static path `${API}/uploads/${file_name}`, which carries
+no disposition header. Note that Chrome refuses to display cross-origin PDFs in
+an iframe, so the dashboard also offers an OPEN button.
 
 ---
 

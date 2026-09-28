@@ -134,11 +134,51 @@ Click **New Article** → opens the article form.
 |---|---|---|
 | Title | ✓ | |
 | Slug | ✓ | auto-generated from title, editable; must be unique |
-| Content | | markdown body (GFM supported) |
+| Content | | markdown body (GFM supported) — see editor below |
 | Published | | toggle — only published articles appear on the public LOGS section |
-| Image | | optional header image |
+| Image | | optional header image (cover) |
 
 If the slug is already taken, the API returns `409`. The error is shown **inline on the slug field**, not as a generic toast.
+
+### Content editor
+
+The content field is a split markdown editor: a source textarea on the left, a
+rendered live preview on the right (toggle with **HIDE/SHOW PREVIEW**). Both
+sides use the exact same renderer as the public article page
+(`src/lib/markdown.tsx`), so the preview matches what readers get.
+
+**Toolbar** — H2, H3, bold, italic, inline code, link, quote, bullet list,
+ordered list, code block, and **IMAGE**. Every action operates on the current
+selection and restores the caret afterwards. The line tools (H2, quote, lists,
+code block) transform every line the selection touches.
+
+### Images inside the body
+
+Press **IMAGE**, pick one or more files, and they are uploaded to
+`POST /api/admin/uploads/images` and inserted at the cursor as markdown:
+
+```markdown
+Some paragraph of text.
+
+![image](/uploads/6f1a2b3c.png)
+
+More text after the image.
+```
+
+Notes:
+
+- `![image]` is a **placeholder** — type over `image` to set the alt text. Alt
+  text is what screen readers announce, so it is worth filling in.
+- The editor always inserts the image as its own block (own line, blank line
+  before and after). Markdown only renders an image as a block when it is
+  separated by blank lines; without them it renders inline with the surrounding
+  text.
+- Uploaded paths are relative (`/uploads/...`) and resolved against the API
+  host at render time, so articles survive a change of domain.
+- Limits: 5 MB per image, jpg/jpeg/png/webp/gif. Rejected files are reported in
+  a toast.
+- Removing an image from the markdown does **not** delete the file from the
+  server — uploads are not garbage collected.
 
 ### Edit
 
@@ -149,6 +189,42 @@ Same form pre-populated. `published` is always sent on PUT (required by the API)
 - Auto-generated from title on create (editable before submit)
 - Unique across all articles
 - `409 slug already exists` → inline error on the field, not a toast
+
+### Tags
+
+Both the project and article forms have a **TAGS** chip input. Type and press
+Enter or comma to commit; Backspace on an empty field removes the last chip;
+the `×` on a chip removes it.
+
+Tags are lowercased, de-duplicated, trimmed, capped at 24 characters and limited
+to 8 per project/article. While you type, chips offering tags **already in use**
+on your projects and articles appear underneath — click one to reuse it, or keep
+typing to invent a new one.
+
+Tags are shown publicly: on the article page under the title, and on each project
+card. Both the public article index (`/articles`) and the `/work` section have a
+click-to-filter bar.
+
+---
+
+## TAGS
+
+**URL:** `/admin/tags`
+
+Tags live in their own table and are shared by projects and articles. Rows are
+created automatically the first time you use a new name, so the list only ever
+contains tags that are in use.
+
+| Action | Notes |
+|---|---|
+| Rename | Inline edit. Lowercases and trims. `409` if the name is already taken |
+| Delete | Asks for confirmation and reports how many items it will unlink from |
+
+Each row shows its usage (`2 articles · 1 project`) and whether it is **IN USE**
+or **UNUSED**. Unused tags linger after you delete the last item that referenced
+them — delete them here to keep the suggestion list in the editor clean.
+
+Renaming a tag changes it everywhere at once, including on the public site.
 
 ---
 

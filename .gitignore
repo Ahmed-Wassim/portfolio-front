@@ -43,3 +43,10 @@ scaffold-log.txt
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# postman
+/postman/
+*.postman_collection.json
+*.postman_environment.json
+*.postman_collection*.json
+*.postman_environment*.json
