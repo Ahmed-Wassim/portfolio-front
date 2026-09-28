@@ -177,6 +177,9 @@ export type SocialInput = {
   sort_order?: number
 }
 
+/**
+ * Thrown by the SWR fetcher so `error.message` carries the API's own error text.
+ */
 export class ApiError extends Error {
   status: number
 
