@@ -4,8 +4,6 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowLeft, Download } from "lucide-react"
 import { cvDownloadUrl } from "@/lib/api"
-import { Header } from "@/components/public/Header"
-import { Footer } from "@/components/public/Footer"
 import { PageLoader } from "@/components/ui/PageLoader"
 
 type State = "loading" | "ready" | "failed"
@@ -39,7 +37,6 @@ export default function CVPage() {
 
   return (
     <>
-      <Header />
       <main id="main" className="mx-auto max-w-5xl px-4 sm:px-6 py-10">
         {/* Top bar */}
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -115,7 +112,6 @@ export default function CVPage() {
           </p>
         )}
       </main>
-      <Footer />
     </>
   )
 }

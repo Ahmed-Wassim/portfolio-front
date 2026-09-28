@@ -1,5 +1,3 @@
-import { Toaster } from "sonner"
-import { Header } from "@/components/public/Header"
 import { Hero } from "@/components/public/Hero"
 import { WorkSection } from "@/components/public/WorkSection"
 import { LogsSection } from "@/components/public/LogsSection"
@@ -7,8 +5,6 @@ import { AboutSection } from "@/components/public/AboutSection"
 import { SkillsSection } from "@/components/public/SkillsSection"
 import { ExperienceSection } from "@/components/public/ExperienceSection"
 import { HireMeSection } from "@/components/public/HireMeSection"
-import { Footer } from "@/components/public/Footer"
-import { BackToTop } from "@/components/ui/BackToTop"
 import {
   listProjects,
   listArticles,
@@ -16,34 +12,31 @@ import {
   listAbout,
   listSkills,
   listExperiences,
-  listSocials,
 } from "@/lib/api"
 import { site } from "@/config/site"
 import type { SkillCategory, Experience } from "@/types/api"
 
-export const dynamic = "force-dynamic"
+/**
+ * Public content is revalidated on an interval rather than forced dynamic:
+ * with `force-dynamic` every visitor triggered a fresh set of seven API calls.
+ * A short window keeps admin edits visible within a minute at a fraction of the
+ * request volume.
+ */
+export const revalidate = 60
 
 export default async function Home() {
   // All fetches independent — one failure never blanks the whole poster.
   // request() never throws (network errors become failed ApiResults),
   // so Promise.all is safe here without allSettled.
-  const [
-    projectsRes,
-    articlesRes,
-    profileRes,
-    aboutRes,
-    skillsRes,
-    experiencesRes,
-    socialsRes,
-  ] = await Promise.all([
-    listProjects(),
-    listArticles(),
-    getProfile(),
-    listAbout(),
-    listSkills(),
-    listExperiences(),
-    listSocials(),
-  ])
+  const [projectsRes, articlesRes, profileRes, aboutRes, skillsRes, experiencesRes] =
+    await Promise.all([
+      listProjects({ revalidate: 60 }),
+      listArticles({ revalidate: 60 }),
+      getProfile({ revalidate: 60 }),
+      listAbout({ revalidate: 60 }),
+      listSkills({ revalidate: 60 }),
+      listExperiences({ revalidate: 60 }),
+    ])
 
   const projects = projectsRes.ok ? projectsRes.data : null
   const projectsOffline = projects === null
@@ -55,7 +48,6 @@ export default async function Home() {
   const aboutData = aboutRes.ok ? aboutRes.data : null
   const skillsData = skillsRes.ok ? skillsRes.data : null
   const experiencesData = experiencesRes.ok ? experiencesRes.data : null
-  const socialsData = socialsRes.ok ? socialsRes.data : null
 
   const apiOnline = !projectsOffline && !articlesOffline
 
@@ -95,25 +87,16 @@ export default async function Home() {
       created_at: "",
       updated_at: "",
     }))
-  const socialLinks = socialsData?.length
-    ? socialsData.map((s) => ({ label: s.platform, href: s.url, iconKey: s.icon || s.platform }))
-    : [...site.socials]
 
   return (
-    <>
-      <Toaster position="bottom-right" richColors />
-      <Header />
-      <main id="main">
-        <Hero apiOnline={apiOnline} tagline={tagline} stack={stack} />
-        <WorkSection projects={projects} offline={projectsOffline} />
-        <LogsSection articles={articles} offline={articlesOffline} />
-        <AboutSection paragraphs={aboutParagraphs} />
-        <SkillsSection categories={skillCategoryList} />
-        <ExperienceSection experiences={experienceList} />
-        <HireMeSection />
-      </main>
-      <Footer socials={socialLinks} />
-      <BackToTop />
-    </>
+    <main id="main">
+      <Hero apiOnline={apiOnline} tagline={tagline} stack={stack} />
+      <WorkSection projects={projects} offline={projectsOffline} />
+      <LogsSection articles={articles} offline={articlesOffline} />
+      <AboutSection paragraphs={aboutParagraphs} />
+      <SkillsSection categories={skillCategoryList} />
+      <ExperienceSection experiences={experienceList} />
+      <HireMeSection />
+    </main>
   )
 }

@@ -1,8 +1,9 @@
 import Link from "next/link"
 import { site } from "@/config/site"
+import { Section } from "@/components/ui/Section"
 import { StatusPill } from "@/components/public/StatusPill"
 import { Reveal } from "@/components/ui/Reveal"
-import { formatLogDate, readingTime } from "@/lib/utils"
+import { ArticleRow } from "@/components/public/ArticleRow"
 import type { Article } from "@/types/api"
 
 interface LogsSectionProps {
@@ -14,27 +15,24 @@ export function LogsSection({ articles, offline }: LogsSectionProps) {
   const isEmpty = !articles || articles.length === 0
 
   return (
-    <section id="logs" className="section-anchor border-b-2 border-[var(--ink)]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16">
-        {/* Section header */}
-        <div className="flex items-center justify-between mb-6 sm:mb-10 border-b-2 border-[var(--ink)] pb-4">
-          <h2 className="font-mono font-black text-2xl tracking-tight">/ LOGS</h2>
-          <div className="flex items-center gap-4">
-            {!isEmpty && (
-              <Link
-                href="/articles"
-                className="font-mono text-xs font-bold tracking-widest flash-blue focus-brutal"
-              >
-                ALL LOGS →
-              </Link>
-            )}
-            {offline && (
-              <StatusPill status="offline" label={site.statusOffline} />
-            )}
-          </div>
+    <Section
+      id="logs"
+      title="LOGS"
+      aside={
+        <div className="flex items-center gap-4">
+          {!isEmpty && (
+            <Link
+              href="/articles"
+              className="font-mono text-xs font-bold tracking-widest flash-blue focus-brutal"
+            >
+              ALL LOGS →
+            </Link>
+          )}
+          {offline && <StatusPill status="offline" label={site.statusOffline} />}
         </div>
-
-        {isEmpty ? (
+      }
+    >
+      {isEmpty ? (
           <>
             <div className="space-y-0">
               {[0, 1, 2].map((i) => (
@@ -59,28 +57,14 @@ export function LogsSection({ articles, offline }: LogsSectionProps) {
             </p>
           </>
         ) : (
-          <div className="space-y-0">
-            {articles.map((article, i) => (
-              <Reveal key={article.id} delay={i * 60}>
-                <Link
-                  href={`/articles/${article.slug}`}
-                  className="flex items-center gap-6 border-b border-[var(--ghost)] py-4 flash-blue focus-brutal group"
-                >
-                  <span className="font-mono text-xs text-[var(--muted)] shrink-0 tracking-widest">
-                    [{formatLogDate(article.created_at)}]
-                  </span>
-                  <span className="font-mono text-sm font-bold tracking-tight group-hover:text-[var(--secondary)] transition-colors line-clamp-1 flex-1 min-w-0">
-                    {article.title}
-                  </span>
-                  <span className="font-mono text-xs text-[var(--muted)] shrink-0 hidden sm:block">
-                    {readingTime(article.content)}
-                  </span>
-                </Link>
-              </Reveal>
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
+        <div className="space-y-0">
+          {articles.map((article, i) => (
+            <Reveal key={article.id} delay={i * 60}>
+              <ArticleRow article={article} />
+            </Reveal>
+          ))}
+        </div>
+      )}
+    </Section>
   )
 }

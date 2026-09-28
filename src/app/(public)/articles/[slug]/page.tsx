@@ -5,20 +5,17 @@ import { getArticleBySlug, uploadUrl } from "@/lib/api"
 import { Markdown } from "@/lib/markdown"
 import { TagList } from "@/components/public/Tags"
 import { formatLogDate, readingTime } from "@/lib/utils"
-import { Header } from "@/components/public/Header"
-import { Footer } from "@/components/public/Footer"
-import { BackToTop } from "@/components/ui/BackToTop"
 import { ScrollProgress } from "@/components/ui/ScrollProgress"
 
 interface Props {
   params: Promise<{ slug: string }>
 }
 
-export const dynamic = "force-dynamic"
+export const revalidate = 60
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params
-  const result = await getArticleBySlug(slug)
+  const result = await getArticleBySlug(slug, { revalidate: 60 })
   if (!result.ok) return {}
   const article = result.data
   const img = uploadUrl(article.image)
@@ -41,7 +38,7 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function ArticlePage({ params }: Props) {
   const { slug } = await params
-  const result = await getArticleBySlug(slug)
+  const result = await getArticleBySlug(slug, { revalidate: 60 })
 
   if (!result.ok) notFound()
 
@@ -52,7 +49,6 @@ export default async function ArticlePage({ params }: Props) {
   return (
     <>
       <ScrollProgress />
-      <Header />
       <main id="main" className="mx-auto max-w-3xl px-4 sm:px-6 py-12">
         <Link
           href="/#logs"
@@ -97,8 +93,6 @@ export default async function ArticlePage({ params }: Props) {
           <Markdown>{article.content}</Markdown>
         </article>
       </main>
-      <Footer />
-      <BackToTop />
     </>
   )
 }

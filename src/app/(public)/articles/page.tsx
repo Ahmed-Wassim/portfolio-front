@@ -1,16 +1,13 @@
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { listArticles } from "@/lib/api"
-import { Header } from "@/components/public/Header"
-import { Footer } from "@/components/public/Footer"
-import { BackToTop } from "@/components/ui/BackToTop"
 import { ArticleList } from "@/components/public/ArticleList"
 import { site } from "@/config/site"
 import type { Article } from "@/types/api"
 
 // Server-rendered so the list is in the HTML for search engines and no-JS
 // visitors; only the tag filter is interactive.
-export const dynamic = "force-dynamic"
+export const revalidate = 60
 
 export async function generateMetadata() {
   return {
@@ -25,12 +22,11 @@ export async function generateMetadata() {
 }
 
 export default async function ArticlesIndexPage() {
-  const result = await listArticles()
+  const result = await listArticles({ revalidate: 60 })
   const articles: Article[] = result.ok ? result.data : []
 
   return (
     <>
-      <Header />
       <main id="main" className="mx-auto max-w-3xl px-4 sm:px-6 py-12">
         <Link
           href="/#logs"
@@ -52,8 +48,6 @@ export default async function ArticlesIndexPage() {
           <ArticleList articles={articles} />
         )}
       </main>
-      <Footer />
-      <BackToTop />
     </>
   )
 }

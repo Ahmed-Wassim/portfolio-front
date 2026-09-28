@@ -1,3 +1,4 @@
+import { Section } from "@/components/ui/Section"
 import { Reveal } from "@/components/ui/Reveal"
 
 interface AboutSectionProps {
@@ -6,19 +7,14 @@ interface AboutSectionProps {
 
 export function AboutSection({ paragraphs }: AboutSectionProps) {
   return (
-    <section id="about" className="section-anchor border-b-2 border-[var(--ink)]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16">
-        <div className="border-b-2 border-[var(--ink)] pb-4 mb-6 sm:mb-10">
-          <h2 className="font-mono font-black text-2xl tracking-tight">/ ABOUT</h2>
-        </div>
-        <div className="max-w-2xl space-y-4">
-          {paragraphs.map((para, i) => (
-            <Reveal key={i} delay={i * 80}>
-              <p className="font-sans text-base leading-relaxed">{para}</p>
-            </Reveal>
-          ))}
-        </div>
+    <Section id="about" title="ABOUT">
+      <div className="max-w-2xl space-y-4">
+        {paragraphs.map((para, i) => (
+          <Reveal key={i} delay={i * 80}>
+            <p className="font-sans text-base leading-relaxed">{para}</p>
+          </Reveal>
+        ))}
       </div>
-    </section>
+    </Section>
   )
 }

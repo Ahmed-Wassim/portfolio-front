@@ -2,20 +2,18 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, ExternalLink, GitFork } from "lucide-react"
 import { getProject, uploadUrl } from "@/lib/api"
-import { PlaceholderBlock } from "@/components/public/PlaceholderBlock"
-import { Header } from "@/components/public/Header"
-import { Footer } from "@/components/public/Footer"
-import { BackToTop } from "@/components/ui/BackToTop"
+import { ProjectImage } from "@/components/public/ProjectImage"
+import { TagList } from "@/components/public/Tags"
 
 interface Props {
   params: Promise<{ id: string }>
 }
 
-export const dynamic = "force-dynamic"
+export const revalidate = 60
 
 export async function generateMetadata({ params }: Props) {
   const { id } = await params
-  const result = await getProject(id)
+  const result = await getProject(id, { revalidate: 60 })
   if (!result.ok) return {}
   const p = result.data
   const img = uploadUrl(p.image)
@@ -34,7 +32,7 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function ProjectPage({ params }: Props) {
   const { id } = await params
-  const result = await getProject(id)
+  const result = await getProject(id, { revalidate: 60 })
 
   if (!result.ok) notFound()
 
@@ -43,7 +41,6 @@ export default async function ProjectPage({ params }: Props) {
 
   return (
     <>
-      <Header />
       <main id="main" className="mx-auto max-w-4xl px-4 sm:px-6 py-12">
         <Link
           href="/#work"
@@ -55,11 +52,7 @@ export default async function ProjectPage({ params }: Props) {
 
         {/* Image */}
         <div className="border-brutal shadow-brutal-lg mb-8 overflow-hidden">
-          {imgSrc ? (
-            <ProjectImage src={imgSrc} alt={project.title} />
-          ) : (
-            <PlaceholderBlock aspect="aspect-video" className="w-full" />
-          )}
+          <ProjectImage image={imgSrc} title={project.title} />
         </div>
 
         {/* Meta */}
@@ -74,9 +67,13 @@ export default async function ProjectPage({ params }: Props) {
         <h1 className="font-mono font-black text-3xl sm:text-4xl tracking-tight mb-4">
           {project.title.toUpperCase()}
         </h1>
-        <p className="font-sans text-base leading-relaxed text-[var(--muted)] mb-8 max-w-2xl">
+        <p className="font-sans text-base leading-relaxed text-[var(--muted)] mb-4 max-w-2xl">
           {project.description}
         </p>
+
+        {project.tags.length > 0 && (
+          <TagList tags={project.tags} className="mb-8" />
+        )}
 
         {/* Links */}
         <div className="flex flex-wrap gap-4">
@@ -104,22 +101,6 @@ export default async function ProjectPage({ params }: Props) {
           )}
         </div>
       </main>
-      <Footer />
-      <BackToTop />
     </>
-  )
-}
-
-function ProjectImage({ src, alt }: { src: string; alt: string }) {
-  return (
-    <div className="aspect-video relative">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={alt}
-        className="w-full h-full object-cover"
-        onError={undefined}
-      />
-    </div>
   )
 }

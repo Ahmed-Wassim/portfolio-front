@@ -3,11 +3,12 @@
 import { useState } from "react"
 import Link from "next/link"
 import { site } from "@/config/site"
+import { Section } from "@/components/ui/Section"
 import { PlaceholderBlock } from "@/components/public/PlaceholderBlock"
+import { ProjectImage } from "@/components/public/ProjectImage"
 import { StatusPill } from "@/components/public/StatusPill"
 import { TagFilter, TagList, collectTags } from "@/components/public/Tags"
 import { Reveal } from "@/components/ui/Reveal"
-import { uploadUrl } from "@/lib/api"
 import type { Project } from "@/types/api"
 
 interface WorkSectionProps {
@@ -22,37 +23,6 @@ function sortProjects(projects: Project[]): Project[] {
   })
 }
 
-function ProjectImage({
-  image,
-  title,
-}: {
-  image: string
-  title: string
-}) {
-  const src = uploadUrl(image)
-  if (!src) return <PlaceholderBlock className="w-full" aspect="aspect-video" />
-
-  return (
-    <div className="aspect-video w-full overflow-hidden border-b-2 border-[var(--ink)] relative">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={title}
-        className="w-full h-full object-cover"
-        onError={(e) => {
-          const target = e.currentTarget
-          target.style.display = "none"
-          const placeholder = target.nextElementSibling as HTMLElement | null
-          if (placeholder) placeholder.style.display = "block"
-        }}
-      />
-      <div style={{ display: "none" }} className="absolute inset-0">
-        <PlaceholderBlock className="w-full h-full" aspect="" />
-      </div>
-    </div>
-  )
-}
-
 export function WorkSection({ projects, offline }: WorkSectionProps) {
   const [tag, setTag] = useState<string | null>(null)
 
@@ -62,17 +32,14 @@ export function WorkSection({ projects, offline }: WorkSectionProps) {
   const isEmpty = sorted.length === 0
 
   return (
-    <section id="work" className="section-anchor border-b-2 border-[var(--ink)]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16">
-        {/* Section header */}
-        <div className="flex items-center justify-between mb-6 sm:mb-10 border-b-2 border-[var(--ink)] pb-4">
-          <h2 className="font-mono font-black text-2xl tracking-tight">/ WORK</h2>
-          {offline && (
-            <StatusPill status="offline" label={site.statusOffline} />
-          )}
-        </div>
-
-        {isEmpty ? (
+    <Section
+      id="work"
+      title="WORK"
+      aside={
+        offline && <StatusPill status="offline" label={site.statusOffline} />
+      }
+    >
+      {isEmpty ? (
           <>
             <p className="font-mono text-xs text-[var(--muted)] mb-8 tracking-widest">
               {site.workEmpty}
@@ -133,7 +100,6 @@ export function WorkSection({ projects, offline }: WorkSectionProps) {
             )}
           </>
         )}
-      </div>
-    </section>
+    </Section>
   )
 }
