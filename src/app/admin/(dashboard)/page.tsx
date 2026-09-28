@@ -3,6 +3,7 @@
 import useSWR from "swr"
 import { swrFetcher } from "@/lib/api"
 import { StatCard } from "@/components/admin/StatCard"
+import { CVPanel } from "@/components/admin/CVPanel"
 import type { Dashboard } from "@/types/api"
 
 export default function AdminDashboardPage() {
@@ -41,6 +42,10 @@ export default function AdminDashboardPage() {
           <StatCard label="UNREAD MESSAGES" value={data.unread_messages} />
         </div>
       )}
+
+      <div className="mt-6">
+        <CVPanel />
+      </div>
     </div>
   )
 }

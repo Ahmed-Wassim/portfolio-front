@@ -1,15 +1,20 @@
 "use client"
 
 import { useId, useState } from "react"
+import useSWR from "swr"
 import { toast } from "sonner"
 import { Upload } from "lucide-react"
-import { uploadCV, cvDownloadUrl } from "@/lib/api"
+import { uploadCV, cvDownloadUrl, swrFetcher } from "@/lib/api"
+import { formatLogDate } from "@/lib/utils"
+import type { CV } from "@/types/api"
 
 export default function AdminCVPage() {
   const inputId = useId()
+  const { data: cv, mutate } = useSWR<CV>("/api/admin/cv", swrFetcher, {
+    shouldRetryOnError: false,
+  })
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
-  const [uploadedAt, setUploadedAt] = useState<string | null>(null)
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
@@ -29,7 +34,7 @@ export default function AdminCVPage() {
     setUploading(false)
     if (result.ok) {
       toast.success("CV uploaded successfully.")
-      setUploadedAt(new Date().toLocaleString())
+      await mutate()
       setFile(null)
     } else {
       toast.error(result.error || "Upload failed.")
@@ -50,20 +55,27 @@ export default function AdminCVPage() {
           {" "}and linked from the DOWNLOAD CV button on the public page.
         </p>
 
-        {/* Current CV link */}
+        {/* Current CV */}
         <div className="border-brutal bg-[var(--panel)] p-4">
           <p className="font-mono text-xs font-bold tracking-widest mb-2">CURRENT CV</p>
-          <a
-            href={cvDownloadUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-mono text-xs flash-blue focus-brutal break-all"
-          >
-            {cvDownloadUrl()}
-          </a>
-          {uploadedAt && (
-            <p className="font-mono text-xs text-[var(--success)] mt-2">
-              Last uploaded: {uploadedAt}
+          {cv ? (
+            <>
+              <p className="font-mono text-xs text-[var(--muted)] break-all mb-2">
+                {cv.file_name}
+              </p>
+              <p className="font-mono text-xs text-[var(--muted)] mb-3">
+                Uploaded {formatLogDate(cv.created_at)}
+              </p>
+              <a
+                href={cvDownloadUrl()}
+                className="font-mono text-xs flash-blue focus-brutal"
+              >
+                Download the current CV →
+              </a>
+            </>
+          ) : (
+            <p className="font-mono text-xs text-[var(--muted)]">
+              No CV uploaded yet.
             </p>
           )}
         </div>
