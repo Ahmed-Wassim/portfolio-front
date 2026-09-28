@@ -4,8 +4,8 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
-  useState,
+  useMemo,
+  useSyncExternalStore,
   type ReactNode,
 } from "react"
 
@@ -20,42 +20,58 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
-function resolveInitialTheme(): Theme {
-  // Reads the data-theme the no-FOUC script already set on <html>.
-  // Falls back to system preference, then light.
+/**
+ * The DOM is the source of truth. The no-FOUC script in the root layout writes
+ * `data-theme` on <html> before first paint, so reading it here reflects the
+ * user's stored choice even on a cold load.
+ */
+function readTheme(): Theme {
   if (typeof document === "undefined") return "light"
   const attr = document.documentElement.getAttribute("data-theme")
-  if (attr === "dark" || attr === "light") return attr
-  if (window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark"
+  return attr === "dark" ? "dark" : "light"
+}
+
+/** The server has no DOM and no localStorage. */
+function getServerTheme(): Theme {
   return "light"
 }
 
+const listeners = new Set<() => void>()
+
+function subscribe(onChange: () => void) {
+  listeners.add(onChange)
+  return () => listeners.delete(onChange)
+}
+
+function writeTheme(theme: Theme) {
+  document.documentElement.setAttribute("data-theme", theme)
+  try {
+    localStorage.setItem(STORAGE_KEY, theme)
+  } catch {
+    // localStorage blocked — in-session only, still works
+  }
+  for (const listener of listeners) listener()
+}
+
+/**
+ * useSyncExternalStore rather than useState + useEffect.
+ *
+ * Reading the DOM during render makes the client's first render disagree with
+ * the server's ("light"), which is a hydration mismatch — and the header renders
+ * a different icon per theme, so the mismatch is visible. This hook tells React
+ * to use the server snapshot for the hydration render and swap to the real value
+ * straight after, with no setState-in-effect cascade.
+ */
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // Seeded during the first render, not in an effect. The server always
-  // renders "light" while the no-FOUC script may have already flipped <html>
-  // to dark, so the first client render must read the DOM to avoid a mismatch;
-  // after that the state is authoritative and the toggle drives it.
-  const [theme, setTheme] = useState<Theme>(resolveInitialTheme)
+  const theme = useSyncExternalStore(subscribe, readTheme, getServerTheme)
 
   const toggle = useCallback(() => {
-    setTheme((prev) => (prev === "light" ? "dark" : "light"))
+    writeTheme(readTheme() === "light" ? "dark" : "light")
   }, [])
 
-  // Single place that applies theme to DOM + storage.
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme)
-    try {
-      localStorage.setItem(STORAGE_KEY, theme)
-    } catch {
-      // localStorage blocked — in-session only, still works
-    }
-  }, [theme])
+  const value = useMemo(() => ({ theme, toggle }), [theme, toggle])
 
-  return (
-    <ThemeContext.Provider value={{ theme, toggle }}>
-      {children}
-    </ThemeContext.Provider>
-  )
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }
 
 export function useTheme(): ThemeContextValue {
