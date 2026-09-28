@@ -1,24 +1,16 @@
 "use client"
 
-import useSWR from "swr"
-import { swrFetcher } from "@/lib/api"
+import { CVCard } from "@/components/admin/CVCard"
+import { PageHeader } from "@/components/admin/PageHeader"
 import { StatCard } from "@/components/admin/StatCard"
-import { CVPanel } from "@/components/admin/CVPanel"
-import type { Dashboard } from "@/types/api"
+import { useDashboard } from "@/hooks/useDashboard"
 
 export default function AdminDashboardPage() {
-  const { data, isLoading, error } = useSWR<Dashboard>(
-    "/api/admin/dashboard",
-    swrFetcher,
-    { shouldRetryOnError: false }
-  )
+  const { data, isLoading, error } = useDashboard()
 
   return (
     <div className="p-4 sm:p-8">
-      <div className="border-b-2 border-[var(--ink)] pb-4 mb-6 sm:mb-8">
-        <p className="font-mono text-xs text-[var(--muted)] tracking-widest mb-1">OVERVIEW</p>
-        <h1 className="font-mono font-black text-2xl tracking-tight">DASHBOARD</h1>
-      </div>
+      <PageHeader kicker="OVERVIEW" title="DASHBOARD" />
 
       {isLoading && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -44,7 +36,7 @@ export default function AdminDashboardPage() {
       )}
 
       <div className="mt-6">
-        <CVPanel />
+        <CVCard />
       </div>
     </div>
   )

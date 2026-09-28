@@ -1,11 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import useSWR from "swr"
+import useSWR, { useSWRConfig } from "swr"
 import { toast } from "sonner"
 import { Pencil, Trash2, Check, X } from "lucide-react"
+import { PageHeader } from "@/components/admin/PageHeader"
+import { DataList } from "@/components/admin/DataList"
 import {
   ADMIN_TAGS_KEY,
+  TAG_DEPENDENT_KEYS,
   swrFetcher,
   renameTag,
   deleteTag,
@@ -14,11 +17,14 @@ import { cn } from "@/lib/utils"
 import type { Tag } from "@/types/api"
 
 export default function AdminTagsPage() {
-  const { data, isLoading, error, mutate } = useSWR<Tag[]>(
+  const { data, isLoading, error } = useSWR<Tag[]>(
     ADMIN_TAGS_KEY,
     swrFetcher,
     { shouldRetryOnError: false },
   )
+  // Global mutate so sibling collections can be revalidated by key; the bound
+  // mutate above is typed to Tag[] only.
+  const { mutate } = useSWRConfig()
   const [editingId, setEditingId] = useState<number | null>(null)
   const [draft, setDraft] = useState("")
   const [busy, setBusy] = useState(false)
@@ -26,6 +32,18 @@ export default function AdminTagsPage() {
   function startEdit(tag: Tag) {
     setEditingId(tag.id)
     setDraft(tag.name)
+  }
+
+  /**
+   * Content lists embed tag names rather than tag ids, so a rename or delete
+   * has to revalidate them too. Without this the admin kept showing the old
+   * name until a manual refresh.
+   */
+  async function revalidateTags() {
+    await mutate(ADMIN_TAGS_KEY)
+    await Promise.all(
+      TAG_DEPENDENT_KEYS.map((key) => mutate(key as string)),
+    )
   }
 
   async function save(id: number) {
@@ -36,8 +54,7 @@ export default function AdminTagsPage() {
     if (result.ok) {
       toast.success("Tag renamed.")
       setEditingId(null)
-      // The content lists embed tag names, so refresh them too.
-      await mutate()
+      await revalidateTags()
     } else if (result.status === 409) {
       toast.error("That tag name is already taken.")
     } else {
@@ -56,7 +73,7 @@ export default function AdminTagsPage() {
     const result = await deleteTag(tag.id)
     if (result.ok) {
       toast.success("Tag deleted.")
-      await mutate()
+      await revalidateTags()
     } else {
       toast.error(result.error || "Failed to delete tag.")
     }
@@ -64,10 +81,7 @@ export default function AdminTagsPage() {
 
   return (
     <div className="p-4 sm:p-8">
-      <div className="border-b-2 border-[var(--ink)] pb-4 mb-6 sm:mb-8">
-        <p className="font-mono text-xs text-[var(--muted)] tracking-widest mb-1">CONTENT</p>
-        <h1 className="font-mono font-black text-2xl tracking-tight">TAGS</h1>
-      </div>
+      <PageHeader kicker="CONTENT" title="TAGS" />
 
       <p className="font-mono text-xs text-[var(--muted)] tracking-wide leading-relaxed max-w-2xl mb-6">
         Tags are created automatically when you save a project or article. Rename
@@ -75,27 +89,14 @@ export default function AdminTagsPage() {
         content.
       </p>
 
-      {isLoading && (
-        <div className="space-y-2 max-w-2xl">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="h-11 border-brutal bg-[var(--panel)] animate-pulse" />
-          ))}
-        </div>
-      )}
-
-      {error && (
-        <p className="font-mono text-sm text-[var(--danger)]">Failed to load tags.</p>
-      )}
-
-      {data && data.length === 0 && (
-        <p className="font-mono text-xs text-[var(--muted)] tracking-widest">
-          No tags yet. Add some from a project or article.
-        </p>
-      )}
-
-      {data && data.length > 0 && (
+      <DataList
+        isLoading={isLoading}
+        error={error}
+        count={data?.length ?? 0}
+        emptyLabel="No tags yet. Add some from a project or article."
+      >
         <ul className="max-w-2xl border-t-2 border-[var(--ink)]">
-          {data.map((tag) => (
+          {(data ?? []).map((tag) => (
             <li
               key={tag.id}
               className="flex items-center gap-3 border-b border-[var(--ghost)] py-2.5"
@@ -170,7 +171,7 @@ export default function AdminTagsPage() {
             </li>
           ))}
         </ul>
-      )}
+      </DataList>
     </div>
   )
 }
