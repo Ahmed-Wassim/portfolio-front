@@ -93,8 +93,8 @@ export const ADMIN_SOCIALS_KEY = "/api/admin/socials"
 export const ADMIN_CV_KEY = "/api/admin/cv"
 export const DASHBOARD_KEY = "/api/admin/dashboard"
 
-const PUBLIC_PROJECTS_KEY = "/api/projects"
-const PUBLIC_ARTICLES_KEY = "/api/articles"
+export const PUBLIC_PROJECTS_KEY = "/api/projects"
+export const PUBLIC_ARTICLES_KEY = "/api/articles"
 
 /**
  * Tag renames and deletes change the tag names embedded in content lists, so
@@ -127,37 +127,38 @@ export function adminSocialKey(id: number | string) {
 // ── Key → envelope + normalizer ───────────────────────────────────────────────
 
 /**
- * A route descriptor for every path that SWR may be asked to fetch. Built by
- * matching the concrete path back to its resource, so `/api/admin/skills/3`
- * and `/api/skills` both resolve to the right normalizer.
+ * Every path SWR may be asked to fetch, longest first so `/admin/skill-categories`
+ * is matched before `/admin/skills`. Derived from the same declarations as the
+ * keys above, so a new endpoint only has to be registered once.
+ */
+type Route = readonly [base: string, descriptor: BareResource<never>]
+
+const ROUTES: Route[] = ([
+  [ADMIN_SKILL_CATEGORIES_KEY, READS.skillCategories as BareResource<never>],
+  [ADMIN_ABOUT_KEY, READS.about as BareResource<never>],
+  [ADMIN_EXPERIENCES_KEY, READS.experiences as BareResource<never>],
+  [ADMIN_PROJECTS_KEY, READS.projects as BareResource<never>],
+  [ADMIN_ARTICLES_KEY, READS.articles as BareResource<never>],
+  [ADMIN_MESSAGES_KEY, READS.messages as BareResource<never>],
+  [ADMIN_PROFILE_KEY, READS.profile as BareResource<never>],
+  [ADMIN_SKILLS_KEY, READS.skills as BareResource<never>],
+  [ADMIN_SOCIALS_KEY, READS.socials as BareResource<never>],
+  [ADMIN_TAGS_KEY, READS.tags as BareResource<never>],
+  [PUBLIC_PROJECTS_KEY, READS.projects as BareResource<never>],
+  [PUBLIC_ARTICLES_KEY, READS.articles as BareResource<never>],
+  [ADMIN_CV_KEY, READS.cv as BareResource<never>],
+] as Route[]).sort((a, b) => b[0].length - a[0].length)
+
+/**
+ * Resolves a concrete path back to its resource, or null if unregistered.
+ * The cast is safe: `BareResource<T>` varies only in the normalizer's return
+ * type, which is irrelevant when routing.
  */
 function describe(path: string): BareResource<unknown> | null {
-  // Dashboard returns scalar counts, not an envelope.
-  if (path === DASHBOARD_KEY) return null
-
-  const routes: Array<[string, BareResource<unknown>]> = [
-    [ADMIN_PROJECTS_KEY, READS.projects],
-    [PUBLIC_PROJECTS_KEY, READS.projects],
-    [ADMIN_ARTICLES_KEY, READS.articles],
-    [PUBLIC_ARTICLES_KEY, READS.articles],
-    [ADMIN_MESSAGES_KEY, READS.messages],
-    [ADMIN_TAGS_KEY, READS.tags],
-    [ADMIN_PROFILE_KEY, READS.profile],
-    [ADMIN_ABOUT_KEY, READS.about],
-    [ADMIN_SKILL_CATEGORIES_KEY, READS.skillCategories],
-    [ADMIN_SKILLS_KEY, READS.skills],
-    [ADMIN_EXPERIENCES_KEY, READS.experiences],
-    [ADMIN_SOCIALS_KEY, READS.socials],
-    [ADMIN_CV_KEY, READS.cv],
-  ]
-
-  // Longest prefix wins so `/admin/skill-categories` is not mistaken for
-  // `/admin/skills`.
-  const match = routes
-    .filter(([base]) => path === base || path.startsWith(`${base}/`))
-    .sort((a, b) => b[0].length - a[0].length)[0]
-
-  return match ? match[1] : null
+  const match = ROUTES.find(
+    ([base]) => path === base || path.startsWith(`${base}/`),
+  )
+  return (match?.[1] as BareResource<unknown> | undefined) ?? null
 }
 
 export function isAdminKey(path: string) {
