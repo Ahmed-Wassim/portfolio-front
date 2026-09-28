@@ -30,6 +30,8 @@ AUTH
 
 ADMIN (protected — Bearer token required)
   GET    /api/admin/dashboard
+  GET    /api/admin/projects
+  GET    /api/admin/projects/:id
   POST   /api/admin/projects
   PUT    /api/admin/projects/:id
   DELETE /api/admin/projects/:id
@@ -76,7 +78,9 @@ Returns all projects sorted by `created_at DESC`.
 }
 ```
 
-> Note: GORM embeds PascalCase keys (`ID`, `CreatedAt`, `UpdatedAt`). `lib/api.ts` normalizes these automatically before the frontend ever reads them.
+> Note: GORM embeds PascalCase keys (`ID`, `CreatedAt`, `UpdatedAt`). The
+> normalizers in `src/lib/normalize.ts` convert these before any component
+> reads them, so components only ever see snake_case.
 
 ---
 
@@ -219,6 +223,29 @@ Missing / expired / invalid token → `401 { "error": "unauthorized" }`
 
 ---
 
+### `GET /api/admin/projects`
+
+Identical to `GET /api/projects` — projects are not filtered publicly — but
+registered under the protected prefix so the dashboard has an authenticated
+read of its own.
+
+**Response 200** — same shape as `GET /api/projects`.
+
+---
+
+### `GET /api/admin/projects/:id`
+
+Fetches one project by id, including tags.
+
+**Response 200**
+```json
+{ "project": { ...project object... } }
+```
+
+**Response 404** if no project has that id.
+
+---
+
 ### `POST /api/admin/projects`
 
 **Content-Type:** `multipart/form-data`
@@ -230,6 +257,7 @@ Missing / expired / invalid token → `401 { "error": "unauthorized" }`
 | `link` | string | | external URL |
 | `github` | string | | GitHub URL |
 | `featured` | string | | `"true"` or `"false"` |
+| `tags` | string | | repeatable; created on demand |
 | `image` | file | | jpg, jpeg, png, webp, gif |
 
 **Response 201**

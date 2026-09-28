@@ -77,20 +77,26 @@ Defined in `src/app/globals.css` on `:root` (light) and `[data-theme="dark"]` (d
 | `--success` | `#16A34A` | `#4ADE80` | Toast success |
 | `--ghost` | `color-mix(in srgb, var(--ink) 8%, transparent)` | `color-mix(... 12%, ...)` | Grid dots, watermark |
 
-Tailwind aliases (registered in `@theme`):
+Tailwind aliases are declared in `:root` and reference the tokens above rather
+than repeating their values:
 
 ```
 --color-bg        --color-ink       --color-panel
 --color-main      --color-secondary --color-small
 --color-muted     --color-border    --color-status-online
---color-danger    --color-success   --color-ghost
+--color-danger    --color-success
 ```
+
+`--color-border` maps to `--ink`. **Never give an alias its own hex value** —
+the two blocks used to hold separate copies, so editing a token silently left
+every `bg-*` / `text-*` utility on the old colour.
 
 **Rules:**
 - Colors only via tokens. Never raw hex in components.
 - `--main` slabs use `--ink` for body text — never `--muted` (contrast).
 - Decorative shapes use `--secondary` / `--small` as paint only (`pointer-events: none`). Never attach hover flash to decorative geometry.
 - Dark mode: yellow and pink stay vivid. `shadow-brutal-lg` uses `6px` offset in dark (same visual weight as `8px` on light).
+- The dark block redeclares only what differs; `--main` is the same in both.
 
 ---
 
@@ -171,11 +177,31 @@ Apply globally to all interactive elements. Replaces browser default outline.
 }
 ```
 
+There is **one** such block in `globals.css`, declared after `.reveal` so its
+override is explicit rather than an accident of source order. A second, narrower
+block handles `.loader-bar`.
+
 Status LED solid on (no blink). Reveal wrapper is no-op. Button press transform still works (it is input feedback, not decoration).
 
 ---
 
 ## COMPONENT PATTERNS
+
+### Form controls
+
+`.input-brutal`, `.label-brutal` and `.error-brutal` in `globals.css` are the
+single definition of the form styling. Use them via the `Field` primitives in
+`components/ui/Field.tsx` rather than restating the class string — it was
+previously repeated around 30 times and drifted between forms.
+
+```tsx
+<TextField label="TITLE" error={errors.title?.message} {...register("title")} />
+```
+
+`Field` wires `aria-describedby` to the error node, so validation messages are
+announced rather than only coloured.
+
+---
 
 ### `StatusPill`
 
