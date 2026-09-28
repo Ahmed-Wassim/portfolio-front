@@ -14,13 +14,28 @@
   --danger: #DC2626;
   --success: #16A34A;
   --ghost: color-mix(in srgb, #111111 8%, transparent);
+
+  /* Tailwind v4 colour aliases point at the variables above rather than
+     repeating the hex values. Previously both blocks held literal hex, so
+     editing a token in :root silently left every `bg-*`/`text-*` utility on
+     the old value. */
+  --color-bg: var(--bg);
+  --color-ink: var(--ink);
+  --color-panel: var(--panel);
+  --color-main: var(--main);
+  --color-secondary: var(--secondary);
+  --color-small: var(--small);
+  --color-muted: var(--muted);
+  --color-border: var(--ink);
+  --color-status-online: var(--status-online);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
 }
 
 [data-theme="dark"] {
   --bg: #0F0F0E;
   --ink: #F7F5ED;
   --panel: #1C1C1C;
-  --main: #FFF500;
   --secondary: #60A5FA;
   --small: #F9A8D4;
   --muted: #9CA3AF;
@@ -28,21 +43,11 @@
   --danger: #F87171;
   --success: #4ADE80;
   --ghost: color-mix(in srgb, #F7F5ED 12%, transparent);
+  /* --main stays #FFF500: it is the one accent that keeps its dark-on-yellow
+     contrast in both themes, so it is not redeclared above. */
 }
 
-/* Tailwind v4 theme aliases — static values only */
 @theme {
-  --color-bg: #F7F5ED;
-  --color-ink: #111111;
-  --color-panel: #FFFFFF;
-  --color-main: #FFF500;
-  --color-secondary: #3B82F6;
-  --color-small: #F472B6;
-  --color-muted: #6B6B6B;
-  --color-border: #111111;
-  --color-status-online: #22C55E;
-  --color-danger: #DC2626;
-  --color-success: #16A34A;
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
 }
@@ -176,17 +181,6 @@ header, footer, aside, nav,
   outline-offset: 2px;
 }
 
-/* ── Reduced motion ───────────────────────────────── */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
 /* ── Status LED blink ─────────────────────────────── */
 @keyframes blink {
   0%, 100% { opacity: 1; }
@@ -214,6 +208,10 @@ header, footer, aside, nav,
   transform: translateY(0);
 }
 
+/* ── Reduced motion ─────────────────────────────────
+   Single block, declared after .reveal so it can override it. It used to be
+   duplicated verbatim, which meant the .reveal override only applied by
+   accident of source order. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -350,4 +348,43 @@ header, footer, aside, nav,
     transform: scaleY(1) !important;
     opacity: 0.6 !important;
   }
+}
+
+/* ── Form controls ────────────────────────────────
+   The shared input/label/error class strings previously appeared ~30 times
+   across the admin forms and the public contact form. */
+
+.input-brutal {
+  width: 100%;
+  border: 2px solid var(--ink);
+  background-color: var(--bg);
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.input-brutal:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.input-brutal:disabled {
+  opacity: 0.5;
+}
+
+.label-brutal {
+  display: block;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.25rem;
+}
+
+.error-brutal {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  color: var(--danger);
+  margin-top: 0.25rem;
 }

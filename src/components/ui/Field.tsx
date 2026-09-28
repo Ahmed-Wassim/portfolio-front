@@ -30,13 +30,13 @@ export function Field({ label, hint, error, children }: FieldProps) {
 
   return (
     <div>
-      <label htmlFor={id} className="block font-mono text-xs font-bold tracking-widest mb-1">
+      <label htmlFor={id} className="label-brutal">
         {label}
         {hint && <span className="text-[var(--muted)] font-normal"> {hint}</span>}
       </label>
       {children({ id, "aria-describedby": error ? errorId : undefined })}
       {error && (
-        <p id={errorId} className="font-mono text-xs text-[var(--danger)] mt-1">
+        <p id={errorId} className="error-brutal">
           {error}
         </p>
       )}
@@ -44,8 +44,7 @@ export function Field({ label, hint, error, children }: FieldProps) {
   )
 }
 
-const inputClass =
-  "w-full border-brutal bg-[var(--bg)] px-3 py-2 font-mono text-sm focus-brutal outline-none disabled:opacity-50"
+const inputClass = "input-brutal"
 
 interface TextFieldProps {
   label: string
@@ -165,7 +164,6 @@ export function CheckboxField({ label, disabled, ...props }: CheckboxFieldProps)
       />
       <label htmlFor={id} className="font-mono text-xs font-bold tracking-widest">
         {label}
-      </label>
-    </div>
+      </label>    </div>
   )
 }
