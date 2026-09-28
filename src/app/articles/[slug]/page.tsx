@@ -1,17 +1,14 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import ReactMarkdown from "react-markdown"
-import remarkGfm from "remark-gfm"
-import rehypeSanitize from "rehype-sanitize"
-import type { Components } from "react-markdown"
 import { getArticleBySlug, uploadUrl } from "@/lib/api"
+import { Markdown } from "@/lib/markdown"
+import { TagList } from "@/components/public/Tags"
 import { formatLogDate, readingTime } from "@/lib/utils"
 import { Header } from "@/components/public/Header"
 import { Footer } from "@/components/public/Footer"
 import { BackToTop } from "@/components/ui/BackToTop"
 import { ScrollProgress } from "@/components/ui/ScrollProgress"
-import { CopyButton } from "@/components/ui/CopyButton"
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -38,58 +35,6 @@ export async function generateMetadata({ params }: Props) {
     twitter: {
       card: "summary_large_image",
       title: article.title,
-    },
-  }
-}
-
-// Custom markdown components with copy button on code blocks
-function buildComponents(): Components {
-  return {
-    a({ href, children, ...rest }) {
-      const isExternal = href && /^https?:\/\//i.test(href)
-      return (
-        <a
-          href={href}
-          {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-          className="flash-blue focus-brutal"
-          {...rest}
-        >
-          {children}
-        </a>
-      )
-    },
-    pre({ children, ...rest }) {
-      // Extract text from nested code element for the copy button
-      let codeText = ""
-      try {
-        const child = children as React.ReactElement<{ children?: unknown }>
-        if (child?.props?.children != null) {
-          codeText = String(child.props.children)
-        }
-      } catch {
-        // ignore
-      }
-      return (
-        <div className="relative group">
-          <pre style={{ overflowX: "auto" }} {...rest}>
-            {children}
-          </pre>
-          {codeText && <CopyButton text={codeText} />}
-        </div>
-      )
-    },
-    code({ children, className, ...rest }) {
-      return (
-        <code className={className} {...rest}>
-          {children}
-        </code>
-      )
-    },
-    img({ src, alt, ...rest }) {
-      return (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={alt ?? ""} style={{ maxWidth: "100%" }} {...rest} />
-      )
     },
   }
 }
@@ -130,6 +75,9 @@ export default async function ArticlePage({ params }: Props) {
           <h1 className="font-mono font-black text-3xl sm:text-4xl tracking-tight">
             {article.title}
           </h1>
+          {article.tags.length > 0 && (
+            <TagList tags={article.tags} linkBase="/articles" className="mt-3" />
+          )}
         </div>
 
         {/* Cover image */}
@@ -146,13 +94,7 @@ export default async function ArticlePage({ params }: Props) {
 
         {/* Markdown content */}
         <article className="prose-brutal">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeSanitize]}
-            components={buildComponents()}
-          >
-            {article.content}
-          </ReactMarkdown>
+          <Markdown>{article.content}</Markdown>
         </article>
       </main>
       <Footer />

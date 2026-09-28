@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { useSWRConfig } from "swr"
 import { createProject, updateProject, uploadUrl, ADMIN_PROJECTS_KEY } from "@/lib/api"
 import { PlaceholderBlock } from "@/components/public/PlaceholderBlock"
+import { TagInput } from "@/components/admin/TagInput"
 import { useUnsavedWarning } from "@/hooks/useUnsavedWarning"
 import { useKeyboardSubmit } from "@/hooks/useKeyboardSubmit"
 import type { Project } from "@/types/api"
@@ -35,6 +36,7 @@ export function ProjectForm({ project }: ProjectFormProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(
     project?.image ? uploadUrl(project.image) : null
   )
+  const [tags, setTags] = useState<string[]>(project?.tags ?? [])
 
   const titleId = useId()
   const descId = useId()
@@ -42,6 +44,7 @@ export function ProjectForm({ project }: ProjectFormProps) {
   const githubId = useId()
   const featuredId = useId()
   const imageId = useId()
+  const tagsId = useId()
 
   const {
     register,
@@ -75,7 +78,7 @@ export function ProjectForm({ project }: ProjectFormProps) {
   }
 
   async function onSubmit(values: FormValues) {
-    const input = { ...values, image: imageFile ?? undefined }
+    const input = { ...values, image: imageFile ?? undefined, tags }
     const result = project
       ? await updateProject(project.id, input)
       : await createProject(input)
@@ -165,6 +168,13 @@ export function ProjectForm({ project }: ProjectFormProps) {
           FEATURED
         </label>
       </div>
+
+      <TagInput
+        id={tagsId}
+        tags={tags}
+        onChange={setTags}
+        disabled={isSubmitting}
+      />
 
       <div className="flex gap-3 pt-2">
         <button
