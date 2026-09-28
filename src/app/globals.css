@@ -61,6 +61,12 @@
 html {
   background-color: var(--bg);
   color: var(--ink);
+  /* Reserve the scrollbar gutter permanently. Without this, the gutter is
+     added and removed as the page grows and shrinks, so the whole layout
+     shifts sideways by the scrollbar width whenever it appears — and on
+     browsers with auto-hiding scrollbars the bar itself fades in on
+     interaction. `stable` keeps the space allocated either way. */
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -191,9 +197,12 @@ header, footer, aside, nav,
   animation: blink 1s step-start infinite;
 }
 
-/* ── Section anchor offset (clears sticky header) ─── */
+/* ── Section anchor offset (clears sticky header) ───
+   Matches the header's measured height (~64.7px). Landing exactly on it means
+   the previous section's bottom border sits directly beneath the header's own
+   border instead of peeking out as a second line. 5rem left a 15px band. */
 .section-anchor {
-  scroll-margin-top: 5rem;
+  scroll-margin-top: 4.05rem;
 }
 
 /* ── Reveal animation ─────────────────────────────── */

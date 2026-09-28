@@ -18,6 +18,11 @@ export function Header() {
 
   useEffect(() => {
     const observers: IntersectionObserver[] = []
+    // Track which nav sections are on screen so the highlight can be cleared
+    // again. Setting it only on entry left the last matched section stuck as
+    // active — scrolling to #hire (which is not in the nav) still highlighted
+    // /SKILLS.
+    const visible = new Set<string>()
 
     sectionIds.forEach((id) => {
       const el = document.getElementById(id)
@@ -25,7 +30,13 @@ export function Header() {
 
       const obs = new IntersectionObserver(
         ([entry]) => {
-          if (entry.isIntersecting) setActiveSection(id)
+          if (entry.isIntersecting) visible.add(id)
+          else visible.delete(id)
+
+          // Prefer the first section in document order among those visible,
+          // so a tall section can't hand the highlight to a later sibling.
+          const first = sectionIds.find((s) => visible.has(s))
+          setActiveSection(first ?? "")
         },
         { rootMargin: "-20% 0px -70% 0px", threshold: 0 }
       )
