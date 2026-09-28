@@ -9,6 +9,7 @@ export type Project = {
   image: string
   link: string
   github: string
+  tags: string[]
   featured: boolean
   created_at: string
   updated_at: string
@@ -20,6 +21,7 @@ export type Article = {
   slug: string
   content: string
   image: string
+  tags: string[]
   published: boolean
   created_at: string
   updated_at: string
@@ -41,11 +43,20 @@ export type Dashboard = {
   unread_messages: number
 }
 
+/** A tag row from the tags table, with how much content uses it. */
+export type Tag = {
+  id: number
+  name: string
+  article_count: number
+  project_count: number
+}
+
 export type ProjectInput = {
   title: string
   description: string
   link?: string
   github?: string
+  tags?: string[]
   featured: boolean
   image?: File | null
 }
@@ -54,6 +65,7 @@ export type ArticleInput = {
   title: string
   slug: string
   content?: string
+  tags?: string[]
   published: boolean
   image?: File | null
 }

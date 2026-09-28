@@ -3,6 +3,7 @@ import type {
   Article,
   ArticleInput,
   ContactInput,
+  Tag,
   Message,
   Project,
   ProjectInput,
@@ -102,6 +103,13 @@ function asBool(value: unknown) {
   return value === true || value === "true" || value === "1" || value === 1
 }
 
+// Tags come back as objects ([{ ID, name }]) from the tags table, but the UI only
+// ever needs the names, so they are flattened here.
+function asTagNames(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value.map((tag) => asString(asRecord(tag).name)).filter(Boolean)
+}
+
 export function normalizeProject(rawUnknown: unknown): Project {
   const raw = asRecord(rawUnknown)
   return {
@@ -111,6 +119,7 @@ export function normalizeProject(rawUnknown: unknown): Project {
     image: asString(pick(raw, "image")),
     link: asString(pick(raw, "link")),
     github: asString(pick(raw, "github")),
+    tags: asTagNames(pick(raw, "tags")),
     featured: asBool(pick(raw, "featured")),
     created_at: asString(pick(raw, "created_at", "CreatedAt")),
     updated_at: asString(pick(raw, "updated_at", "UpdatedAt")),
@@ -125,6 +134,7 @@ export function normalizeArticle(rawUnknown: unknown): Article {
     slug: asString(pick(raw, "slug")),
     content: asString(pick(raw, "content")),
     image: asString(pick(raw, "image")),
+    tags: asTagNames(pick(raw, "tags")),
     published: asBool(pick(raw, "published")),
     created_at: asString(pick(raw, "created_at", "CreatedAt")),
     updated_at: asString(pick(raw, "updated_at", "UpdatedAt")),
@@ -269,6 +279,7 @@ function projectFormData(input: ProjectInput) {
   data.append("link", input.link ?? "")
   data.append("github", input.github ?? "")
   data.append("featured", input.featured ? "true" : "false")
+  for (const tag of input.tags ?? []) data.append("tags", tag)
   if (input.image) data.append("image", input.image)
   return data
 }
@@ -279,6 +290,7 @@ function articleFormData(input: ArticleInput) {
   data.append("slug", input.slug)
   data.append("content", input.content ?? "")
   data.append("published", input.published ? "true" : "false")
+  for (const tag of input.tags ?? []) data.append("tags", tag)
   if (input.image) data.append("image", input.image)
   return data
 }
@@ -337,6 +349,60 @@ export async function deleteArticle(id: number | string): Promise<ApiResult<unkn
   return request(`/api/admin/articles/${id}`, { method: "DELETE", auth: true })
 }
 
+// ── Tags ───────────────────────────────────────────────────────────────────────
+
+export const ADMIN_TAGS_KEY = "/api/admin/tags"
+
+export function normalizeTag(rawUnknown: unknown): Tag {
+  const raw = asRecord(rawUnknown)
+  return {
+    id: asNumber(pick(raw, "id", "ID")),
+    name: asString(pick(raw, "name")),
+    article_count: asNumber(pick(raw, "article_count")),
+    project_count: asNumber(pick(raw, "project_count")),
+  }
+}
+
+export async function renameTag(id: number | string, name: string): Promise<ApiResult<Tag>> {
+  // The handler binds `form:"name"`, so this must be sent as form data rather
+  // than JSON.
+  const data = new FormData()
+  data.append("name", name)
+  const res = await request<{ tag?: unknown }>(`/api/admin/tags/${id}`, {
+    method: "PATCH",
+    auth: true,
+    body: data,
+  })
+  if (!res.ok) return res
+  return ok(normalizeTag(res.data.tag), res.status)
+}
+
+export async function deleteTag(id: number | string): Promise<ApiResult<unknown>> {
+  return request(`/api/admin/tags/${id}`, { method: "DELETE", auth: true })
+}
+
+/**
+ * Upload one or more images and get back their public paths
+ * (e.g. ["/uploads/abc.png"]). The paths are relative on purpose so they can be
+ * embedded in article markdown without hardcoding the API host.
+ */
+export async function uploadImages(files: File[]): Promise<ApiResult<string[]>> {
+  const data = new FormData()
+  for (const file of files) {
+    data.append("images", file)
+  }
+
+  const res = await request<{ images?: unknown }>("/api/admin/uploads/images", {
+    method: "POST",
+    auth: true,
+    body: data,
+  })
+  if (!res.ok) return res
+
+  const list = Array.isArray(res.data.images) ? res.data.images : []
+  return ok(list.map(asString), res.status)
+}
+
 export async function markMessageRead(id: number | string): Promise<ApiResult<Message>> {
   const res = await request<{ message?: unknown }>(`/api/admin/messages/${id}`, {
     method: "PATCH",
@@ -378,6 +444,13 @@ function unwrapSWR<T>(path: string, payload: unknown): T {
   }
   if (path.startsWith("/api/admin/messages/")) {
     return normalizeMessage(raw.message) as T
+  }
+  if (path === "/api/admin/cv") {
+    return normalizeCV(raw.cv) as T
+  }
+  if (path === "/api/admin/tags") {
+    const list = Array.isArray(raw.tags) ? raw.tags : []
+    return list.map(normalizeTag) as T
   }
   if (path === "/api/admin/dashboard") {
     return {
@@ -679,6 +752,27 @@ export function cvDownloadUrl(): string {
   return `${apiBase()}/api/cv`
 }
 
+/**
+ * The stored PDF lives on the public /uploads static route, which serves it with
+ * no Content-Disposition — so a browser renders it inline rather than
+ * downloading it. GET /api/cv cannot be used for a preview because it forces an
+ * attachment.
+ */
+export function cvPreviewUrl(fileName?: string | null): string | null {
+  if (!fileName) return null
+  return `${apiBase()}/uploads/${fileName}`
+}
+
+export function normalizeCV(rawUnknown: unknown): CV {
+  const raw = asRecord(rawUnknown)
+  return {
+    id: asNumber(pick(raw, "id", "ID")),
+    file_name: asString(pick(raw, "file_name", "FileName")),
+    created_at: asString(pick(raw, "created_at", "CreatedAt")),
+    updated_at: asString(pick(raw, "updated_at", "UpdatedAt")),
+  }
+}
+
 export async function uploadCV(file: File): Promise<ApiResult<CV>> {
   const data = new FormData()
   data.append("cv", file)
@@ -686,14 +780,5 @@ export async function uploadCV(file: File): Promise<ApiResult<CV>> {
     method: "POST", auth: true, body: data,
   })
   if (!res.ok) return res
-  const raw = asRecord(res.data.cv)
-  return ok(
-    {
-      id: asNumber(pick(raw, "id", "ID")),
-      file_name: asString(pick(raw, "file_name", "FileName")),
-      created_at: asString(pick(raw, "created_at", "CreatedAt")),
-      updated_at: asString(pick(raw, "updated_at", "UpdatedAt")),
-    },
-    res.status,
-  )
+  return ok(normalizeCV(res.data.cv), res.status)
 }
