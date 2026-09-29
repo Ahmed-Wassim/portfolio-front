@@ -68,6 +68,9 @@ export function useCrudForm<TValues extends FieldValues, TInput, TResult>({
 
   const form = useForm<TValues>({
     resolver: zodResolver(schema),
+    // RHF widens TValues to FieldValues internally, so its defaultValues type
+    // will not accept a bare generic. Narrow, not `never` — a broad cast here
+    // previously hid a real bug in useNextSort.
     defaultValues: defaultValues as DefaultValues<TValues>,
   })
 
@@ -89,7 +92,12 @@ export function useCrudForm<TValues extends FieldValues, TInput, TResult>({
 
   return {
     form,
-    submit: form.handleSubmit(submit) as (e?: React.BaseSyntheticEvent) => Promise<void>,
+    // Same widening as above: the handler is over TValues, RHF wants the
+    // widened FieldValues. Cast to the call-site-facing shape so FormShell
+    // gets a plain submit function.
+    submit: form.handleSubmit(submit as SubmitHandler<FieldValues>) as (
+      e?: React.BaseSyntheticEvent,
+    ) => Promise<void>,
   }
 }
 
@@ -97,16 +105,19 @@ export function useCrudForm<TValues extends FieldValues, TInput, TResult>({
  * Keeps a sort field in step with `nextSort` once the existing collection
  * resolves from SWR. Without this, a new record briefly shows 0 before the list
  * arrives, and submits 0.
+ *
+ * Takes the form handle (not its `reset` function) and is generic over the form
+ * values, so each call site keeps its own field types instead of needing a cast.
  */
-export function useNextSort(
-  form: Pick<UseFormReturn<FieldValues>, "reset">,
+export function useNextSort<TValues extends FieldValues>(
+  form: Pick<UseFormReturn<TValues>, "reset">,
   field: string,
   nextSort: number,
   enabled: boolean,
 ) {
   useEffect(() => {
     if (enabled) {
-      form.reset((prev: FieldValues) => ({ ...prev, [field]: nextSort }))
+      form.reset((prev: TValues) => ({ ...prev, [field]: nextSort }))
     }
   }, [nextSort, field, enabled, form])
 }

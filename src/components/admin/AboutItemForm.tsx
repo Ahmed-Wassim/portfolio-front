@@ -48,9 +48,9 @@ export function AboutItemForm({ item }: AboutItemFormProps) {
     labels: { create: "About item created.", update: "About item updated." },
   })
 
-  const { register, formState, reset } = form
+  const { register, formState } = form
 
-  useNextSort(reset as never, "sort", nextSort, !item)
+  useNextSort(form, "sort", nextSort, !item)
 
   const { errors, isSubmitting } = formState
 

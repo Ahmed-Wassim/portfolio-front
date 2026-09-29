@@ -61,9 +61,9 @@ export function SocialForm({ item }: { item?: Social }) {
     labels: { create: "Social created.", update: "Social updated." },
   })
 
-  const { register, formState, reset } = form
+  const { register, formState } = form
 
-  useNextSort(reset as never, "sort_order", nextSort, !item)
+  useNextSort(form, "sort_order", nextSort, !item)
 
   const { errors, isSubmitting } = formState
 

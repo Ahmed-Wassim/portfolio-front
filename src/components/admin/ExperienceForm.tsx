@@ -51,9 +51,9 @@ export function ExperienceForm({ item }: { item?: Experience }) {
     labels: { create: "Experience created.", update: "Experience updated." },
   })
 
-  const { register, formState, reset } = form
+  const { register, formState } = form
 
-  useNextSort(reset as never, "sort_order", nextSort, !item)
+  useNextSort(form, "sort_order", nextSort, !item)
 
   const { errors, isSubmitting } = formState
 

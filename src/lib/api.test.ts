@@ -1,11 +1,24 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  ADMIN_ABOUT_KEY,
+  ADMIN_ARTICLES_KEY,
+  ADMIN_CV_KEY,
+  ADMIN_EXPERIENCES_KEY,
+  ADMIN_MESSAGES_KEY,
+  ADMIN_PROFILE_KEY,
+  ADMIN_PROJECTS_KEY,
   ADMIN_SKILL_CATEGORIES_KEY,
   ADMIN_SKILLS_KEY,
+  ADMIN_SOCIALS_KEY,
+  ADMIN_TAGS_KEY,
+  DASHBOARD_KEY,
+  PUBLIC_ARTICLES_KEY,
+  PUBLIC_PROJECTS_KEY,
   adminAboutKey,
   adminProjectKey,
   isAdminKey,
+  resolveRoute,
   TAG_DEPENDENT_KEYS,
 } from "@/lib/resources"
 import {
@@ -129,6 +142,65 @@ describe("normalizeSkillCategory", () => {
 
   it("treats a missing skills array as empty", () => {
     expect(normalizeSkillCategory({ ID: 1, name: "X" }).skills).toEqual([])
+  })
+})
+
+describe("resolveRoute", () => {
+  /**
+   * Regression: the list/item decision used to be a trailing-segment test
+   * (/\/[^/]+$/). Every collection base already contains segments, so
+   * "/api/admin/articles" matched it and was unwrapped as a single record —
+   * handing admin list pages an object where they expected an array, which
+   * surfaced as "filtered.map is not a function".
+   */
+  it("treats a bare collection path as a list", () => {
+    for (const key of [
+      ADMIN_ARTICLES_KEY,
+      ADMIN_PROJECTS_KEY,
+      ADMIN_MESSAGES_KEY,
+      ADMIN_ABOUT_KEY,
+      ADMIN_EXPERIENCES_KEY,
+      ADMIN_SOCIALS_KEY,
+      ADMIN_TAGS_KEY,
+      ADMIN_SKILLS_KEY,
+      ADMIN_SKILL_CATEGORIES_KEY,
+      PUBLIC_ARTICLES_KEY,
+      PUBLIC_PROJECTS_KEY,
+    ]) {
+      const route = resolveRoute(key)
+      expect(route, key).not.toBeNull()
+      expect(route!.isItem, key).toBe(false)
+    }
+  })
+
+  it("treats a path with an id appended as a single record", () => {
+    for (const key of [ADMIN_ARTICLES_KEY, ADMIN_PROJECTS_KEY, ADMIN_ABOUT_KEY]) {
+      const route = resolveRoute(`${key}/12`)
+      expect(route!.isItem, key).toBe(true)
+      expect(route!.descriptor.item, key).toBeTruthy()
+    }
+  })
+
+  it("treats singleton endpoints as a single record at their base path", () => {
+    // GET /api/admin/profile answers { profile: {...} }, not a list. Classified
+    // as a collection it unwrapped to [] — truthy, so a `if (profile)` guard
+    // let an empty array through and crashed the page on `stack.map`.
+    for (const key of [ADMIN_PROFILE_KEY, ADMIN_CV_KEY]) {
+      const route = resolveRoute(key)
+      expect(route!.isItem, key).toBe(true)
+    }
+  })
+
+  it("routes skill categories to their own descriptor, not skills", () => {
+    const route = resolveRoute(ADMIN_SKILL_CATEGORIES_KEY)
+    expect(route!.isItem).toBe(false)
+    expect(route!.descriptor.list).toBe("skill_categories")
+    expect(route!.descriptor.item).toBe("skill_category")
+  })
+
+  it("returns null for an unregistered path", () => {
+    expect(resolveRoute("/api/unknown")).toBeNull()
+    expect(resolveRoute(DASHBOARD_KEY)).toBeNull()
   })
 })
 

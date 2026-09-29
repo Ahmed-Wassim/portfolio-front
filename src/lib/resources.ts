@@ -53,10 +53,21 @@ type BareResource<T> = {
   /** Envelope key holding a single row. */
   item: string
   normalize: (raw: unknown) => T
+  /**
+   * True when the endpoint always returns one record, even at the collection
+   * path — e.g. `GET /api/profile` answers `{ profile: {...} }`, not a list.
+   * Without this the fetcher would unwrap it as a list and yield `[]`.
+   */
+  singleton?: boolean
 }
 
-function resource<T>(list: string, item: string, normalize: (raw: unknown) => T): BareResource<T> {
-  return { list, item, normalize }
+function resource<T>(
+  list: string,
+  item: string,
+  normalize: (raw: unknown) => T,
+  singleton = false,
+): BareResource<T> {
+  return { list, item, normalize, singleton }
 }
 
 /**
@@ -69,7 +80,7 @@ const READS = {
   articles: resource<Article>("articles", "article", normalizeArticle),
   messages: resource<Message>("messages", "message", normalizeMessage),
   tags: resource<Tag>("tags", "tag", normalizeTag),
-  profile: resource<Profile>("profile", "profile", normalizeProfile),
+  profile: resource<Profile>("profile", "profile", normalizeProfile, true),
   about: resource<AboutItem>("about", "about", normalizeAboutItem),
   skillCategories: resource<SkillCategory>(
     "skill_categories",
@@ -79,7 +90,7 @@ const READS = {
   skills: resource<Skill>("skills", "skill", normalizeSkill),
   experiences: resource<Experience>("experiences", "experience", normalizeExperience),
   socials: resource<Social>("socials", "social", normalizeSocial),
-  cv: resource<CV>("cv", "cv", normalizeCV),
+  cv: resource<CV>("cv", "cv", normalizeCV, true),
 } as const
 
 export type ResourceName = keyof typeof READS
@@ -159,15 +170,30 @@ const ROUTES: Route[] = ([
 ] as Route[]).sort((a, b) => b[0].length - a[0].length)
 
 /**
- * Resolves a concrete path back to its resource, or null if unregistered.
- * The cast is safe: `BareResource<T>` varies only in the normalizer's return
- * type, which is irrelevant when routing.
+ * Resolves a concrete path to its resource, and says whether the response is a
+ * collection or a single record.
+ *
+ * The list/item decision comes from matching the path against a declared
+ * collection base, NOT from counting path segments: every base already has
+ * segments (`/api/admin/articles`), so a trailing-segment test classified
+ * `/api/admin/articles` as a single record and handed the page an object
+ * instead of a list.
  */
-function describe(path: string): BareResource<unknown> | null {
+export function resolveRoute(path: string): {
+  descriptor: BareResource<unknown>
+  isItem: boolean
+} | null {
+  // Longest base wins, so /admin/skill-categories beats /admin/skills.
   const match = ROUTES.find(
     ([base]) => path === base || path.startsWith(`${base}/`),
   )
-  return (match?.[1] as BareResource<unknown> | undefined) ?? null
+  if (!match) return null
+
+  const [base, descriptor] = match
+  return {
+    descriptor: descriptor as BareResource<unknown>,
+    isItem: descriptor.singleton === true || path !== base,
+  }
 }
 
 export function isAdminKey(path: string) {
@@ -198,11 +224,10 @@ export async function swrFetcher<T = unknown>(key: string): Promise<T> {
 
   if (path === DASHBOARD_KEY) return normalizeDashboard(res.data) as T
 
-  const descriptor = describe(path)
-  if (!descriptor) return res.data as T
+  const route = resolveRoute(path)
+  if (!route) return res.data as T
 
-  // A trailing segment means a single record; the bare path is a collection.
-  const isItem = /\/[^/]+$/.test(path)
+  const { descriptor, isItem } = route
   return (isItem
     ? descriptor.normalize(unwrapOne(res.data, descriptor.item))
     : unwrapList(res.data, descriptor.list).map(descriptor.normalize)) as T

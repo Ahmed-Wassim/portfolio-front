@@ -11,7 +11,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-dvh bg-[var(--bg)]">
       <Sidebar unreadCount={unreadCount} />
 
-      <div className="flex-1 overflow-auto relative">{children}</div>
+      {/* id="main" is the target of the skip-to-content link in the root
+          layout. Without it that link is dead on every admin page. */}
+      <main id="main" className="flex-1 overflow-auto relative">
+        {children}
+      </main>
     </div>
   )
 }
